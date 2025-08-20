@@ -118,7 +118,7 @@ import React, { useContext, useEffect } from 'react'
 import { AdminContext } from '../../context/AdminContext.jsx'
 
 const DoctorsList = () => {
-  const { doctors, aToken, getAllDoctors } = useContext(AdminContext)
+  const { doctors, aToken, getAllDoctors , changeAvailability} = useContext(AdminContext)
 
   useEffect(() => {
     if (aToken) {
@@ -149,8 +149,8 @@ const DoctorsList = () => {
             <div className="p-4">
               {/* Availability with checkbox (unchanged) */}
               <div className="mt-2 flex items-center justify-center gap-2 text-sm mb-2">
-                <input type="checkbox" checked={item.available}  />
-                <p>{item.available ? 'Available' : 'Unavailable'}</p>
+                <input onChange={()=>changeAvailability(item._id)} type="checkbox" checked={item.available}  />
+                <p>Availability</p>
               </div>
 
               {/* Doctor Name & Specialty */}
