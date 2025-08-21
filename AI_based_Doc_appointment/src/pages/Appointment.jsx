@@ -87,7 +87,7 @@ const Appointment = () => {
         {/* Doctor Image */}
         <div className="flex-shrink-0">
           <img
-            className='bg-[#e3fcf3] w-full sm:max-w-60 rounded-xl object-contain border border-teal-300 p-2'
+            className='bg-[#e3fcf3] w-55 h-55 sm:max-w-60 rounded-xl object-contain border border-teal-300 p-2'
             src={docInfo.image}
             alt=""
           />

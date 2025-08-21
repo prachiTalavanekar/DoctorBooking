@@ -22,7 +22,8 @@ const doctorList = async (req, res) => {
     const doctors = await doctorModel.find({}).select('-password -email');
     res.json({ success: true, doctors });
   } catch (error) {
-    // error handling
+   console.log(error)
+   res.json({success:false,message:error.message})
   }
 };
 
