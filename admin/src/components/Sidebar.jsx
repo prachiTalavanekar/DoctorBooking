@@ -141,6 +141,25 @@ const Sidebar = () => {
               </>
             )}
           </NavLink>
+
+          <NavLink
+            to="/all-users"
+            className={({ isActive }) =>
+              `text-white flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${
+                isActive
+                  ? 'bg-[#f0fbf7ff] border-r-4 border-[#037c6e] text-zinc-700'
+                  : ''
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <img src={isActive ? assets.add_icon : assets.add} alt="All users" />
+                <p>All Users</p>
+              </>
+            )}
+          </NavLink>
+
         </ul>
       )}
     </div>

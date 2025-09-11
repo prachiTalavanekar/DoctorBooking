@@ -72,16 +72,74 @@ const AdminContextProvider = (props) => {
  }
 
 
+
+ const getAllUsers = async () => {
+  try {
+    const { data } = await axios.get(`${backendUrl}/api/admin/all-users`, {
+      headers: { Authorization: `Bearer ${aToken}` }
+    });
+    return data?.users || [];
+  } catch (error) {
+    toast.error("Failed to fetch users");
+    return [];
+  }
+};
+
+const deleteUser = async (userId) => {
+  try {
+    const { data } = await axios.delete(`${backendUrl}/api/admin/delete-user/${userId}`, {
+      headers: { Authorization: `Bearer ${aToken}` }
+    });
+    return data;
+  } catch (error) {
+    toast.error("Delete failed");
+    return { success: false };
+  }
+};
+
+
+
+
+const getUserCount = async () => {
+  try {
+    const { data } = await axios.get(`${backendUrl}/api/admin/stats/users`, {
+      headers: { Authorization: `Bearer ${aToken}` },
+    });
+    return data?.count || 0;
+  } catch (error) {
+    toast.error("Failed to fetch user count");
+    return 0;
+  }
+};
+
+const getDoctorCount = async () => {
+  try {
+    const { data } = await axios.get(`${backendUrl}/api/admin/stats/doctors`, {
+      headers: { Authorization: `Bearer ${aToken}` },
+    });
+    return data?.count || 0;
+  } catch (error) {
+    toast.error("Failed to fetch doctor count");
+    return 0;
+  }
+};
+
+
+
   const value = {
     aToken,
     setAToken,
     backendUrl,
     getAllDoctors, changeAvailability,
+    deleteUser,
+    getAllUsers,
+    getDoctorCount,
+    getUserCount
 
   };
 
   return (
-   <AdminContext.Provider value={{backendUrl, setAToken, doctors, aToken, getAllDoctors, changeAvailability }}>
+   <AdminContext.Provider value={{backendUrl, setAToken, doctors, aToken, getAllDoctors, changeAvailability ,deleteUser,getAllUsers,getDoctorCount,getUserCount}}>
       {props.children}
     </AdminContext.Provider>
   );

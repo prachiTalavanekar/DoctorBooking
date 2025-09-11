@@ -1,8 +1,11 @@
 import React from 'react'
+import TopStats from '../../components/TopStates'
 
 const Dashboard = () => {
   return (
-    <div>Dashboard</div>
+    <div>
+      <TopStats />
+    </div>
   )
 }
 

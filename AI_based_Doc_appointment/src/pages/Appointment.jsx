@@ -67,7 +67,7 @@ import RelatedDoctors from '../components/RelatedDoctors'
 
 const Appointment = () => {
   const { docId } = useParams()
-  const { doctors, currencySymbol } = useContext(AppContext)
+  const { doctors, currencySymbol , backendUrl,token,getDoctorData } = useContext(AppContext)
   const [docInfo, setDocInfo] = useState(null)
 
   const fetchDocInfo = async () => {

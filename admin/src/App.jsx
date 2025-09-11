@@ -10,6 +10,7 @@ import Dashboard from './pages/Admin/Dashboard';
 import AllApointments from './pages/Admin/AllApointments';
 import AddDoctor from './pages/Admin/AddDoctor';
 import DoctorsList from './pages/Admin/DoctorsList';
+import AllUsers from './pages/Admin/AllUsers';
 
 
 const App = () => {
@@ -27,6 +28,7 @@ const App = () => {
           <Route path='/all-apointments' element={<AllApointments />} />
           <Route path='/add-doctor' element={<AddDoctor />} />
           <Route path='/doctor-list' element={<DoctorsList />} />
+          <Route path='/all-users' element={<AllUsers />} />
 
         </Routes>
       </div>

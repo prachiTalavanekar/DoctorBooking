@@ -72,6 +72,7 @@ import validator from 'validator';
 import bcrypt from 'bcrypt';
 import { v2 as cloudinary } from 'cloudinary';
 import doctorModel from '../modals/doctorModel.js';
+import userModel from '../modals/userModel.js';
 import jwt from 'jsonwebtoken'
 
 const addDoctor = async (req, res) => {
@@ -173,4 +174,62 @@ try {
 }
 
 
-export { addDoctor, loginAdmin, allDoctors };
+
+// ✅ GET all users
+const allUsers = async (req, res) => {
+  try {
+    const users = await userModel.find({}).select('-password');
+    res.json({ success: true, users });
+  } catch (error) {
+    console.error(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// ✅ DELETE user by ID
+const deleteUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    const deleted = await userModel.findByIdAndDelete(userId);
+
+    if (!deleted) {
+      return res.json({ success: false, message: "User not found" });
+    }
+
+    res.json({ success: true, message: "User deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+
+
+// ✅ Get total users count
+const getTotalUsers = async (req, res) => {
+  try {
+    const count = await userModel.countDocuments();
+    res.json({ success: true, count });
+  } catch (error) {
+    console.error(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// ✅ Get total doctors count
+const getTotalDoctors = async (req, res) => {
+  try {
+    const count = await doctorModel.countDocuments();
+    res.json({ success: true, count });
+  } catch (error) {
+    console.error(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+
+
+export { addDoctor, loginAdmin, allDoctors, allUsers, deleteUser , getTotalUsers, getTotalDoctors };
+
+
