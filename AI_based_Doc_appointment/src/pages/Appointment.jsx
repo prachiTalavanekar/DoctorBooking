@@ -59,22 +59,69 @@
 // export default Appointment
 
 import React, { useContext, useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { AppContext } from '../context/AppContext'
 import { assets } from '../assets/assets'
 import BookingTime from '../components/BookingTime'
 import RelatedDoctors from '../components/RelatedDoctors'
+import { toast } from 'react-toastify'
 
 const Appointment = () => {
   const { docId } = useParams()
   const { doctors, currencySymbol , backendUrl,token,getDoctorData } = useContext(AppContext)
   const [docInfo, setDocInfo] = useState(null)
+  const navigate = useNavigate()
+   const [docSlots, setDocSlots] = useState([])
+  const [slotIndex, setSlotIndex] = useState(0)
+  const [slotTime, setSlotTime] = useState('')
 
   const fetchDocInfo = async () => {
     const docInfo = doctors.find(doc => doc._id === docId)
     setDocInfo(docInfo)
     console.log(docInfo)
   }
+
+const bookAppointment = async () => {
+  if (!token) {
+    toast.warn('Login to book appointment')
+    return navigate('/login')
+  }
+
+  if (!slotTime) {
+    toast.warn('Please select a time slot')
+    return
+  }
+
+  try {
+    const res = await fetch(`${backendUrl}/api/user/book-appointment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        userId: JSON.parse(localStorage.getItem('user'))._id,
+        docId: docInfo._id,
+        slotDate: docSlots[slotIndex][0].datetime.toDateString(),
+        slotTime: slotTime,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      toast.success(data.message || 'Appointment booked successfully!');
+      navigate('/my-appointments'); // Or wherever you want to go after booking
+    } else {
+      toast.error(data.message || 'Failed to book appointment.');
+    }
+  } catch (error) {
+    console.error(error);
+    toast.error('Something went wrong.');
+  }
+};
+
+
 
   useEffect(() => {
     fetchDocInfo()
@@ -129,7 +176,18 @@ const Appointment = () => {
       </div>
 
       {/* Booking Time */}
-      <BookingTime docInfo={docInfo} />
+   <BookingTime
+  docInfo={docInfo}
+  bookAppointment={bookAppointment}
+  slotTime={slotTime}
+  setSlotTime={setSlotTime}
+  slotIndex={slotIndex}
+  setSlotIndex={setSlotIndex}
+  docSlots={docSlots}
+  setDocSlots={setDocSlots}
+/>
+
+
 
       {/* Related Doctors */}
       <RelatedDoctors docId={docId} speciality={docInfo.speciality} />

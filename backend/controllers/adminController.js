@@ -69,11 +69,12 @@
 
 
 import validator from 'validator';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { v2 as cloudinary } from 'cloudinary';
 import doctorModel from '../modals/doctorModel.js';
 import userModel from '../modals/userModel.js';
 import jwt from 'jsonwebtoken'
+import appointmentModel from '../modals/appointmentModel.js'
 
 const addDoctor = async (req, res) => {
     try {
@@ -229,7 +230,17 @@ const getTotalDoctors = async (req, res) => {
 };
 
 
+//count for total appointment API
+const getAppointmentsCount = async (req, res) => {
+  try {
+    const count = await appointmentModel.countDocuments();
+    res.status(200).json({ count });
+  } catch (error) {
+    console.error("Error fetching appointments count:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
 
-export { addDoctor, loginAdmin, allDoctors, allUsers, deleteUser , getTotalUsers, getTotalDoctors };
+export { addDoctor, loginAdmin, allDoctors, allUsers, deleteUser , getTotalUsers, getTotalDoctors  ,getAppointmentsCount };
 
 

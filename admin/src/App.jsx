@@ -11,6 +11,7 @@ import AllApointments from './pages/Admin/AllApointments';
 import AddDoctor from './pages/Admin/AddDoctor';
 import DoctorsList from './pages/Admin/DoctorsList';
 import AllUsers from './pages/Admin/AllUsers';
+import SendNotification from './pages/Admin/SendNotification';
 
 
 const App = () => {
@@ -29,6 +30,7 @@ const App = () => {
           <Route path='/add-doctor' element={<AddDoctor />} />
           <Route path='/doctor-list' element={<DoctorsList />} />
           <Route path='/all-users' element={<AllUsers />} />
+          <Route path='/notify' element={<SendNotification />} />
 
         </Routes>
       </div>

@@ -16,11 +16,15 @@ import add from './add_icon.png'
 import appointment from './appointment_icon.png'
 import people from './people_icon.png'
 import home from './home_icon.png'
+import notification from './notification.png'
+import not from './not.png'
 
 
 
 export const assets = {
     appointment,
+    not,
+    notification,
     home,
     people,
     add,

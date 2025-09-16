@@ -43,6 +43,7 @@ const port = process.env.PORT || 4000;
 connectDB();
 connectCloudinary();
 
+
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

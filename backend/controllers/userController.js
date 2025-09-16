@@ -1,5 +1,5 @@
 import validator from 'validator'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import userModel from '../modals/userModel.js'
 import doctorModel from '../modals/doctorModel.js'
 import jwt from 'jsonwebtoken'
@@ -66,10 +66,10 @@ const loginUser = async (req, res) => {
         if (isMatch) {
             const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
             res.json({
-      success: true,
-      message: "Login successful",
-      token,
-    });
+                success: true,
+                message: "Login successful",
+                token,
+            });
         } else {
             res.json({ success: false, message: "Invalid credentials" });
         }
@@ -252,9 +252,62 @@ const updateProfile = async (req, res) => {
 //     }
 // }
 
+
+
+//----------------------working -----------------------
+// const bookAppointment = async (req, res) => {
+//     try {
+//         const { userId, docId, slotDate, slotTime } = req.body;
+
+//         const docData = await doctorModel.findById(docId).select('-password');
+//         if (!docData.available) {
+//             return res.json({ success: false, message: 'Doctor not available' });
+//         }
+
+//         let slots_booked = docData.slots_booked || {};
+
+//         if (slots_booked[slotDate]) {
+//             if (slots_booked[slotDate].includes(slotTime)) {
+//                 return res.json({ success: false, message: 'Slot not available' });
+//             } else {
+//                 slots_booked[slotDate].push(slotTime);
+//             }
+//         } else {
+//             slots_booked[slotDate] = [slotTime];
+//         }
+
+//         const userData = await userModel.findById(userId).select('-password');
+//         delete docData.slots_booked;
+
+//         const appointmentData = {
+//             userId,
+//             docId,
+//             userData,
+//             docData,
+//             amount: docData.fees,
+//             slotTime,
+//             slotDate,
+//             date: Date.now(),
+//         };
+
+//         const newAppointment = new appointmentModel(appointmentData);
+//         await newAppointment.save();
+
+//         await doctorModel.findByIdAndUpdate(docId, { slots_booked });
+
+//         res.json({ success: true, message: "Appointment booked successfully" });
+//     } catch (error) {
+//         console.log(error);
+//         res.json({ success: false, message: error.message });
+//     }
+// };
+
+// controllers/userController.js
 const bookAppointment = async (req, res) => {
   try {
-    const { userId, docId, slotDate, slotTime } = req.body;
+    // take the authenticated user id
+    const userId = req.userId;          // ✅ from authUser
+    const { docId, slotDate, slotTime } = req.body;
 
     const docData = await doctorModel.findById(docId).select('-password');
     if (!docData.available) {
@@ -277,7 +330,7 @@ const bookAppointment = async (req, res) => {
     delete docData.slots_booked;
 
     const appointmentData = {
-      userId,
+      userId,                  // ✅ use authenticated userId
       docId,
       userData,
       docData,
@@ -292,7 +345,7 @@ const bookAppointment = async (req, res) => {
 
     await doctorModel.findByIdAndUpdate(docId, { slots_booked });
 
-    res.json({ success: true, message: "Appointment booked successfully" });
+    res.json({ success: true, message: 'Appointment booked successfully' });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });
@@ -301,5 +354,66 @@ const bookAppointment = async (req, res) => {
 
 
 
+// API for getting booked appointments
+// const listAppointment = async (req, res) => {
+//     try {
+//         const { userId } = req.body
 
-export { registerUser, loginUser, getProfile, updateProfile , bookAppointment }
+//         // You may want to perform some operations here using userId
+//         const appointments = await appointmentModel.find({ userId })
+
+//         res.json({ success: true, appointments })
+
+//     } catch (error) {
+//         console.log(error)
+//         res.json({ success: false, message: error.message })
+//     }
+// }
+
+
+
+// controllers/userController.js
+// const listAppointment = async (req, res) => {
+//   try {
+//     // get the user id set by authUser middleware
+//     const userId = req.userId;
+
+//     if (!userId) {
+//       return res.status(400).json({ success: false, message: 'User ID not found' });
+//     }
+
+//     // fetch only this user’s appointments
+//     const appointments = await appointmentModel.find({ userId });
+
+//     return res.json({ success: true, appointments });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+
+
+
+
+const listAppointment = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const appointments = await appointmentModel.find({ userId });
+    res.json({ success: true, appointments });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment }

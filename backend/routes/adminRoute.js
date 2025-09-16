@@ -10,7 +10,7 @@
 
 
 import express from 'express';
-import { addDoctor, allDoctors, allUsers, deleteUser, loginAdmin , getTotalUsers, getTotalDoctors } from '../controllers/adminController.js';
+import { addDoctor, allDoctors, allUsers, deleteUser, loginAdmin , getTotalUsers, getTotalDoctors, getAppointmentsCount } from '../controllers/adminController.js';
 import upload from '../middlewares/multer.js';
 import authAdmin from '../middlewares/authAdmin.js';
 import { changeAvailability } from '../controllers/doctorController.js';
@@ -28,6 +28,7 @@ adminRouter.delete('/delete-user/:id', authAdmin, deleteUser);
 
 adminRouter.get('/stats/users', authUser, getTotalUsers);
 adminRouter.get('/stats/doctors', authUser, getTotalDoctors);
+adminRouter.get("/stats/appointments",authAdmin,getAppointmentsCount);
 
 
 

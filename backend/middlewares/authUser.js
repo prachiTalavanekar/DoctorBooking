@@ -22,6 +22,9 @@ const authUser = async (req, res, next) => {
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });
+    console.log('VERIFY SECRET:', process.env.JWT_SECRET);
+    console.log('TOKEN:', token);
+
   }
 }
 

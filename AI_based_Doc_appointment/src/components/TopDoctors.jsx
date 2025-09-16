@@ -73,7 +73,7 @@ const TopDoctors = () => {
   const navigate = useNavigate();
 
   return (
-    <div className='flex flex-col items-center gap-4 mb-16 bt-12 text-gray-900 md:mx-10'>
+    <div className='flex flex-col items-center gap-4 mb-16 bt-12 text-gray-900 md:mx-10 mt-15'>
       {/* Title Section */}
       <h1 className='text-3xl font-medium text-center'>
         <span style={{ color: '#037c6e' }}>Top Doctors</span> to Book

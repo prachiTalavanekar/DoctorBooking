@@ -124,6 +124,17 @@ const getDoctorCount = async () => {
   }
 };
 
+const getAppointmentsCount = async () => {
+  try {
+    const { data } = await axios.get(`${backendUrl}/api/admin/stats/appointments`, {
+      headers: { Authorization: `Bearer ${aToken}` },
+    });
+    return data?.count || 0;
+  } catch (error) {
+    toast.error("Failed to fetch appointments count");
+    return 0;
+  }
+};
 
 
   const value = {
@@ -134,12 +145,13 @@ const getDoctorCount = async () => {
     deleteUser,
     getAllUsers,
     getDoctorCount,
-    getUserCount
+    getUserCount,
+    getAppointmentsCount
 
   };
 
   return (
-   <AdminContext.Provider value={{backendUrl, setAToken, doctors, aToken, getAllDoctors, changeAvailability ,deleteUser,getAllUsers,getDoctorCount,getUserCount}}>
+   <AdminContext.Provider value={{backendUrl, setAToken, doctors, aToken, getAllDoctors, changeAvailability ,deleteUser,getAllUsers,getDoctorCount,getUserCount,getAppointmentsCount}}>
       {props.children}
     </AdminContext.Provider>
   );

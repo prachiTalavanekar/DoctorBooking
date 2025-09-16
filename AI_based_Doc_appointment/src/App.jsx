@@ -15,6 +15,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 
 
+
 const App = () => {
   return (
     <div className='mx-1 sm:mx-[3%]'>
@@ -30,6 +31,7 @@ const App = () => {
         <Route path='/my-profile' element={<MyProfile />} />
         <Route path='/my-appointments' element={<MyAppointments />} />
         <Route path='/appointment/:docId' element={<Appointment />} />
+       
       </Routes>
       <Footer />
     </div>
