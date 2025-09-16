@@ -137,6 +137,20 @@ const getAppointmentsCount = async () => {
 };
 
 
+// const getAllUsersWithAppointments = async () => {
+//   try {
+//     const { data } = await axios.get(`${backendUrl}/api/admin/all-users-with-appointments`, {
+//       headers: { Authorization: `Bearer ${aToken}` }
+//     });
+//     return data?.users || [];
+//   } catch (error) {
+//     toast.error("Failed to fetch users with appointment counts");
+//     return [];
+//   }
+// };
+
+
+
   const value = {
     aToken,
     setAToken,
@@ -146,7 +160,8 @@ const getAppointmentsCount = async () => {
     getAllUsers,
     getDoctorCount,
     getUserCount,
-    getAppointmentsCount
+    getAppointmentsCount,
+  
 
   };
 

@@ -29,6 +29,7 @@ adminRouter.delete('/delete-user/:id', authAdmin, deleteUser);
 adminRouter.get('/stats/users', authUser, getTotalUsers);
 adminRouter.get('/stats/doctors', authUser, getTotalDoctors);
 adminRouter.get("/stats/appointments",authAdmin,getAppointmentsCount);
+// adminRouter.get("/all-users-with-appointments",authUser,allUsersWithAppointments)
 
 
 

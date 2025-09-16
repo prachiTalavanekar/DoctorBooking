@@ -241,6 +241,41 @@ const getAppointmentsCount = async (req, res) => {
   }
 };
 
-export { addDoctor, loginAdmin, allDoctors, allUsers, deleteUser , getTotalUsers, getTotalDoctors  ,getAppointmentsCount };
+
+
+
+// GET all users with their appointment counts
+// const allUsersWithAppointments = async (req, res) => {
+//   try {
+//     const users = await userModel.find({}).select('-password');
+
+//     // Get appointment counts for each user
+//     const userAppointments = await appointmentModel.aggregate([
+//       { $group: { _id: "$userId", totalAppointments: { $sum: 1 } } }
+//     ]);
+
+//     // Map user ID to appointment count
+//     const appointmentCountMap = {};
+//     userAppointments.forEach(item => {
+//       appointmentCountMap[item._id.toString()] = item.totalAppointments;
+//     });
+
+//     // Attach appointment count to each user
+//     const usersWithCount = users.map(user => {
+//       return {
+//         ...user._doc,
+//         totalAppointments: appointmentCountMap[user._id.toString()] || 0
+//       };
+//     });
+
+//     res.json({ success: true, users: usersWithCount });
+
+//   } catch (error) {
+//     console.error(error);
+//     res.json({ success: false, message: error.message });
+//   }
+// };
+
+export { addDoctor, loginAdmin, allDoctors, allUsers, deleteUser , getTotalUsers, getTotalDoctors  ,getAppointmentsCount  };
 
 
