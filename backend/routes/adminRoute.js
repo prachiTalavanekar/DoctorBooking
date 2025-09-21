@@ -10,7 +10,7 @@
 
 
 import express from 'express';
-import { addDoctor, allDoctors, allUsers, deleteUser, loginAdmin , getTotalUsers, getTotalDoctors, getAppointmentsCount } from '../controllers/adminController.js';
+import { addDoctor, allDoctors, allUsers, deleteUser, loginAdmin , getTotalUsers, getTotalDoctors, getAppointmentsCount, appointmentsAdmin, appointmentCancel ,getLatestAppointments,getCancelledAppointmentsCount} from '../controllers/adminController.js';
 import upload from '../middlewares/multer.js';
 import authAdmin from '../middlewares/authAdmin.js';
 import { changeAvailability } from '../controllers/doctorController.js';
@@ -30,6 +30,10 @@ adminRouter.get('/stats/users', authUser, getTotalUsers);
 adminRouter.get('/stats/doctors', authUser, getTotalDoctors);
 adminRouter.get("/stats/appointments",authAdmin,getAppointmentsCount);
 // adminRouter.get("/all-users-with-appointments",authUser,allUsersWithAppointments)
+adminRouter.get('/appointment-list',authAdmin,appointmentsAdmin)
+adminRouter.post('/cancel-appointment',authAdmin,appointmentCancel)
+adminRouter.get("/latest-appointments", authAdmin, getLatestAppointments);
+adminRouter.get("/stats/cancelled-appointments", getCancelledAppointmentsCount);
 
 
 

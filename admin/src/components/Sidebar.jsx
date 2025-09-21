@@ -62,21 +62,24 @@ import React, { useContext } from 'react';
 import { assets } from '../assets_admin/assets';
 import { NavLink } from 'react-router-dom';
 import { AdminContext } from '../context/AdminContext';
+import { DoctorContext } from '../context/DoctorContext';
 
 const Sidebar = () => {
   const { aToken } = useContext(AdminContext);
 
+  const { dToken } = useContext(DoctorContext)
+
+
   return (
-    <div className="min-h-screen bg-[#01302b] border-r border-[#a3eed2ff]">
+    <div className="h-full w-72 bg-[#01302b] border-r border-[#a3eed2ff] overflow-y-auto">
       {aToken && (
         <ul className="text-[#515151] mt-5">
           <NavLink
             to="/admin-dashboard"
             className={({ isActive }) =>
-              `text-white flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${
-                isActive
-                  ? 'bg-[#f0fbf7ff] border-r-4 border-[#037c6e] text-zinc-700'
-                  : ''
+              `text-white flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${isActive
+                ? 'bg-[#f0fbf7ff] border-r-4 border-[#037c6e] text-zinc-700'
+                : ''
               }`
             }
           >
@@ -91,10 +94,9 @@ const Sidebar = () => {
           <NavLink
             to="/all-apointments"
             className={({ isActive }) =>
-              `text-white flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${
-                isActive
-                  ? 'bg-[#f0fbf7ff] border-r-4 border-[#037c6e] text-zinc-700'
-                  : ''
+              `text-white flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${isActive
+                ? 'bg-[#f0fbf7ff] border-r-4 border-[#037c6e] text-zinc-700'
+                : ''
               }`
             }
           >
@@ -109,10 +111,9 @@ const Sidebar = () => {
           <NavLink
             to="/add-doctor"
             className={({ isActive }) =>
-              `text-white flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${
-                isActive
-                  ? 'bg-[#f0fbf7ff] border-r-4 border-[#037c6e] text-zinc-700'
-                  : ''
+              `text-white flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${isActive
+                ? 'bg-[#f0fbf7ff] border-r-4 border-[#037c6e] text-zinc-700'
+                : ''
               }`
             }
           >
@@ -127,10 +128,9 @@ const Sidebar = () => {
           <NavLink
             to="/doctor-list"
             className={({ isActive }) =>
-              `text-white flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${
-                isActive
-                  ? 'bg-[#f0fbf7ff] border-r-4 border-[#037c6e] text-zinc-700'
-                  : ''
+              `text-white flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${isActive
+                ? 'bg-[#f0fbf7ff] border-r-4 border-[#037c6e] text-zinc-700'
+                : ''
               }`
             }
           >
@@ -145,10 +145,9 @@ const Sidebar = () => {
           <NavLink
             to="/all-users"
             className={({ isActive }) =>
-              `text-white flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${
-                isActive
-                  ? 'bg-[#f0fbf7ff] border-r-4 border-[#037c6e] text-zinc-700'
-                  : ''
+              `text-white flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${isActive
+                ? 'bg-[#f0fbf7ff] border-r-4 border-[#037c6e] text-zinc-700'
+                : ''
               }`
             }
           >
@@ -160,13 +159,12 @@ const Sidebar = () => {
             )}
           </NavLink>
 
-            <NavLink
+          <NavLink
             to="/notify"
             className={({ isActive }) =>
-              `text-white flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${
-                isActive
-                  ? 'bg-[#f0fbf7ff] border-r-4 border-[#037c6e] text-zinc-700'
-                  : ''
+              `text-white flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${isActive
+                ? 'bg-[#f0fbf7ff] border-r-4 border-[#037c6e] text-zinc-700'
+                : ''
               }`
             }
           >
@@ -177,6 +175,64 @@ const Sidebar = () => {
               </>
             )}
           </NavLink>
+
+        </ul>
+      )}
+
+      {dToken && (
+        <ul className="text-[#515151] mt-5">
+          <NavLink
+            to="/doctor-dashboard"
+            className={({ isActive }) =>
+              `text-white flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${isActive
+                ? 'bg-[#f0fbf7ff] border-r-4 border-[#037c6e] text-zinc-700'
+                : ''
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <img src={isActive ? assets.home_icon : assets.home} alt="Dashboard" />
+                <p className='hidden md:block'>Dashboard</p>
+              </>
+            )}
+          </NavLink>
+
+          <NavLink
+            to="/doctor-appointments"
+            className={({ isActive }) =>
+              `text-white flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${isActive
+                ? 'bg-[#f0fbf7ff] border-r-4 border-[#037c6e] text-zinc-700'
+                : ''
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <img src={isActive ? assets.people_icon : assets.people} alt="Doctors List" />
+                <p className='hidden md:block'>Appointments</p>
+              </>
+            )}
+          </NavLink>
+
+          <NavLink
+            to="/doctor-profile"
+            className={({ isActive }) =>
+              `text-white flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${isActive
+                ? 'bg-[#f0fbf7ff] border-r-4 border-[#037c6e] text-zinc-700'
+                : ''
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <img src={isActive ? assets.people_icon : assets.people} alt="Doctors List" />
+                <p className='hidden md:block'>Profile</p>
+              </>
+            )}
+          </NavLink>
+
+
 
         </ul>
       )}

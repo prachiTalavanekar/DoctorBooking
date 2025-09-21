@@ -2,13 +2,14 @@ import React, { useContext, useState } from 'react'
 import { assets } from '../assets/assets'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { AppContext } from '../context/AppContext';
+import { IoNotifications } from "react-icons/io5";
 
 
 const Navbar = () => {
 
     const navigate = useNavigate();
 
-    const { token, setToken,userData } = useContext(AppContext)
+    const { token, setToken, userData } = useContext(AppContext)
     const [showMenu, setShowMenu] = useState(false)
     // const [token, setToken] = useState(true)
 
@@ -41,6 +42,12 @@ const Navbar = () => {
                     <hr className='border-none outline-none h-0.5 bg-[#B0DB9C] w-3/5 m-auto hidden' />
 
                 </NavLink>
+                <NavLink to='/notification'>
+                    <IoNotifications className="text-2xl cursor-pointer text-[#037c6e]" />
+                </NavLink>
+
+                {/* Mobile Menu Button */}
+                <img onClick={() => setShowMenu(true)} className='w-6 md:hidden' src={assets.menu_icon} alt="" />
             </ul>
             <div className='flex items-center gap-4'>
                 {
@@ -80,6 +87,7 @@ const Navbar = () => {
                         <NavLink onClick={() => setShowMenu(false)} to='/doctors'><p className='px-4 py-2 rounded inline-block'>All Doctors</p></NavLink>
                         <NavLink onClick={() => setShowMenu(false)} to='/about'><p className='px-4 py-2 rounded inline-block'>About Us</p></NavLink>
                         <NavLink onClick={() => setShowMenu(false)} to='/contact'><p className='px-4 py-2 rounded inline-block'>Contact</p></NavLink>
+
                     </ul>
                 </div>
             </div>

@@ -100,7 +100,7 @@ const bookAppointment = async () => {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        userId: JSON.parse(localStorage.getItem('user'))._id,
+        // userId: JSON.parse(localStorage.getItem('user'))._id,
         docId: docInfo._id,
         slotDate: docSlots[slotIndex][0].datetime.toDateString(),
         slotTime: slotTime,

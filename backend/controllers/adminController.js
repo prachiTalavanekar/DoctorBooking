@@ -276,6 +276,111 @@ const getAppointmentsCount = async (req, res) => {
 //   }
 // };
 
-export { addDoctor, loginAdmin, allDoctors, allUsers, deleteUser , getTotalUsers, getTotalDoctors  ,getAppointmentsCount  };
+
+// API for all appointments list
+// const appointmentsAdmin = async (req, res) => {
+//     try {
+//         const appointments = await appointmentModel.find({}) ;
+//         res.json({ success: true, appointments });
+//     } catch (error) {
+//         console.log(error);
+//         res.json({ success: false, message: error.message });
+//     }
+// };
+
+
+const appointmentsAdmin = async (req, res) => {
+  try {
+    const appointments = await appointmentModel.find({});
+    res.json({ success: true, appointments });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+// cancel appointment
+const appointmentCancel = async (req, res) => {
+  try {
+      // same as listAppointment
+    const { appointmentId } = req.body;
+
+    const appointmentData = await appointmentModel.findById(appointmentId);
+
+    if (!appointmentData) {
+      return res.json({ success: false, message: 'Appointment not found' });
+    }
+
+    // // verify appointment user
+    // if (appointmentData.userId !== userId) {
+    //   return res.json({ success: false, message: 'Unauthorized action' });
+    // }
+
+    await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true });
+
+    // delete doctor slot
+    const { docId, slotDate, slotTime } = appointmentData;
+    const doctorData = await doctorModel.findById(docId);
+
+    let slots_booked = doctorData.slots_booked;
+    slots_booked[slotDate] = slots_booked[slotDate].filter(e => e !== slotTime);
+
+    await doctorModel.findByIdAndUpdate(docId, { slots_booked });
+
+    res.json({ success: true, message: 'Appointment Cancelled' });
+
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+
+// admin dashboard
+const adminDashboard = async (req, res) => {
+    try {
+        // your logic here
+
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+
+// ✅ Get latest appointments (limit 5)
+const getLatestAppointments = async (req, res) => {
+  try {
+    const appointments = await appointmentModel
+      .find({})
+      .sort({ createdAt: -1 }) // latest first
+      .limit(5)
+      .populate("docId", "name image")   // populate doctor info
+      .populate("userId", "name image"); // populate patient info
+
+    res.json({ success: true, appointments });
+  } catch (error) {
+    console.error(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+
+
+// ✅ Get total cancelled appointments count
+const getCancelledAppointmentsCount = async (req, res) => {
+  try {
+    const count = await appointmentModel.countDocuments({ cancelled: true });
+    res.json({ success: true, count });
+  } catch (error) {
+    console.error("Error fetching cancelled appointments count:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
+export { addDoctor, loginAdmin, allDoctors, allUsers, deleteUser , getTotalUsers, getTotalDoctors  ,getAppointmentsCount , appointmentsAdmin ,appointmentCancel, adminDashboard , getLatestAppointments ,getCancelledAppointmentsCount  };
 
 

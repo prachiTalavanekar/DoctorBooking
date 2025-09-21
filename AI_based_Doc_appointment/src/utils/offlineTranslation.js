@@ -1,0 +1,84 @@
+// Offline translation helper for common medical terms
+export const medicalDictionary = {
+  // English to Hindi
+  "en-hi": {
+    "headache": "सिरदर्द",
+    "fever": "बुखार", 
+    "cough": "खांसी",
+    "stomach pain": "पेट दर्द",
+    "chest pain": "सीने में दर्द",
+    "difficulty breathing": "सांस लेने में कठिनाई",
+    "nausea": "मतली",
+    "dizziness": "चक्कर आना",
+    "fatigue": "थकान",
+    "pain": "दर्द",
+    "hello": "नमस्ते",
+    "how are you": "आप कैसे हैं",
+    "thank you": "धन्यवाद",
+    "I have": "मुझे है",
+    "I feel": "मुझे लगता है",
+    "doctor": "डॉक्टर",
+    "medicine": "दवा",
+    "hospital": "अस्पताल",
+    "emergency": "आपातकाल",
+    "help": "मदद",
+    "please": "कृपया"
+  },
+  // English to Marathi  
+  "en-mr": {
+    "headache": "डोकेदुखी",
+    "fever": "ताप",
+    "cough": "खोकला", 
+    "stomach pain": "पोटदुखी",
+    "chest pain": "छातीत दुखणे",
+    "difficulty breathing": "श्वास घेण्यात अडचण",
+    "nausea": "मळमळ",
+    "dizziness": "चक्कर येणे",
+    "fatigue": "थकवा",
+    "pain": "वेदना",
+    "hello": "नमस्कार",
+    "how are you": "तुम्ही कसे आहात",
+    "thank you": "धन्यवाद",
+    "I have": "मला आहे",
+    "I feel": "मला वाटते",
+    "doctor": "डॉक्टर",
+    "medicine": "औषध",
+    "hospital": "रुग्णालय",
+    "emergency": "आणीबाणी",
+    "help": "मदत",
+    "please": "कृपया"
+  }
+};
+
+// Quick offline translation for common terms
+export const quickTranslate = (text, sourceLang, targetLang) => {
+  if (sourceLang === targetLang) return text;
+  
+  const key = `${sourceLang}-${targetLang}`;
+  const dictionary = medicalDictionary[key];
+  
+  if (!dictionary) return text;
+  
+  let translatedText = text.toLowerCase();
+  
+  // Replace known terms
+  for (const [original, translation] of Object.entries(dictionary)) {
+    const regex = new RegExp(original.toLowerCase(), 'gi');
+    translatedText = translatedText.replace(regex, translation);
+  }
+  
+  return translatedText !== text.toLowerCase() ? translatedText : text;
+};
+
+// Get welcome message in different languages
+export const getWelcomeMessage = (language) => {
+  const welcomeMessages = {
+    en: "Hello! I'm MediSync AI, your medical advisor. I provide information but not diagnosis. How may I assist you today?",
+    hi: "नमस्ते! मैं MediSync AI हूं, आपका चिकित्सा सलाहकार। मैं जानकारी प्रदान करता हूं लेकिन निदान नहीं। आज मैं आपकी कैसे सहायता कर सकता हूं?",
+    mr: "नमस्कार! मी MediSync AI आहे, तुमचा वैद्यकीय सल्लागार. मी माहिती देतो पण निदान करत नाही. आज मी तुम्हाला कशी मदत करू शकतो?",
+    es: "¡Hola! Soy MediSync AI, tu asesor médico. Proporciono información pero no diagnóstico. ¿Cómo puedo ayudarte hoy?",
+    fr: "Bonjour! Je suis MediSync AI, votre conseiller médical. Je fournis des informations mais pas de diagnostic. Comment puis-je vous aider aujourd'hui?"
+  };
+  
+  return welcomeMessages[language] || welcomeMessages.en;
+};

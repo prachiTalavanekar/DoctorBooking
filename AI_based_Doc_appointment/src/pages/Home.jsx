@@ -1,6 +1,6 @@
 import React from 'react'
 import Header from '../components/Header'
-import SpecialityMenu from '../components/SpecialityMenu'
+// import SpecialityMenu from '../components/SpecialityMenu'
 import TopDoctors from '../components/TopDoctors'
 import Banner from '../components/Banner'
 import ChatbotIcon from '../components/ChatbotIcon.jsx'
@@ -13,7 +13,7 @@ const Home = () => {
       <ChatbotIcon />
       <Header />
       <OurServices />
-    <SpecialityMenu />
+    {/* <SpecialityMenu /> */}
     <TopDoctors />
     <Banner />
     <FAQ />

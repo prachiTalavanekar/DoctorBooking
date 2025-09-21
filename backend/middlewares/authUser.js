@@ -2,6 +2,8 @@ import jwt from 'jsonwebtoken'
 
 // user authentication middleware
 const authUser = async (req, res, next) => {
+  let token; // ✅ Declare token outside try-catch
+
   try {
     // ✅ Read from Authorization: Bearer <token>
     const authHeader = req.headers.authorization;
@@ -29,3 +31,5 @@ const authUser = async (req, res, next) => {
 }
 
 export default authUser
+
+

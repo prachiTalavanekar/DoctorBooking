@@ -28,7 +28,7 @@ const Login = () => {
           toast.error(data.message)
         }
 
-      } else{
+      } else {
         const { data } = await axios.post(backendUrl + '/api/user/login', { password, email });
         if (data.success) {
           localStorage.setItem('token', data.token)
@@ -39,46 +39,121 @@ const Login = () => {
       }
 
     } catch (error) {
-     toast.error(error.message)
+      toast.error(error.message)
     }
 
   }
 
-useEffect(() => {
-if (token) {
-  navigate('/')
-}
-},[token])
+  useEffect(() => {
+    if (token) {
+      navigate('/')
+    }
+  }, [token])
 
 
   return (
-    <form onSubmit={onSubmitHandler} className='min-h-[70vh] flex items-center' action="">
-      <div className='flex flex-col gap-3 m-auto items-start p-8 min-w-[340px] sm:min-w-96 border  border-[#037c6e] rounded-xl text-zinc-600 text-sm shadow-lg'>
-        <p className='text-2xl font-semibold'>{state === 'Sign Up' ? "Create Account" : "Login"}</p>
-        <p>Please {state === 'Sign Up' ? "Sign up" : "log in"} to book appointment</p>
-        {
-          state === 'Sign Up' && <div className='w-full'>
-            <p>Full Name</p>
-            <input className='outline-none border border-zinc-300 rounded w-full p-2 mt-1 hover:border-[#037c6e]' type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+    <div className='min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center px-4 py-8'>
+      <div className='w-full max-w-md'>
+        <form onSubmit={onSubmitHandler} className='bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden'>
+          {/* Header Section */}
+          <div className='bg-gradient-to-r from-[#037c6e] to-[#048a7b] px-8 py-6 text-center'>
+            <h2 className='text-3xl font-bold text-white mb-2'>
+              {state === 'Sign Up' ? "Create Account" : "Welcome Back"}
+            </h2>
+            <p className='text-white/90 text-sm'>
+              {state === 'Sign Up'
+                ? "Join us to book your appointments easily"
+                : "Sign in to access your appointments"
+              }
+            </p>
           </div>
-        }
 
-        <div className='w-full'>
-          <p>Email</p>
-          <input className='outline-none border border-zinc-300 rounded w-full p-2 mt-1 hover:border-[#037c6e]' type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          {/* Form Section */}
+          <div className='px-8 py-8 space-y-6'>
+            {state === 'Sign Up' && (
+              <div className='space-y-2'>
+                <label className='block text-sm font-medium text-gray-700'>
+                  Full Name
+                </label>
+                <div className='relative'>
+                  <input
+                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#037c6e] focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white'
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter your full name"
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className='space-y-2'>
+              <label className='block text-sm font-medium text-gray-700'>
+                Email Address
+              </label>
+              <div className='relative'>
+                <input
+                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#037c6e] focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white'
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className='space-y-2'>
+              <label className='block text-sm font-medium text-gray-700'>
+                Password
+              </label>
+              <div className='relative'>
+                <input
+                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#037c6e] focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white'
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  required
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className='w-full bg-gradient-to-r from-[#037c6e] to-[#048a7b] text-white py-3 px-4 rounded-lg font-semibold text-base hover:from-[#026157] hover:to-[#037c6e] transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl'
+            >
+              {state === 'Sign Up' ? "Create Account" : "Sign In"}
+            </button>
+
+            {/* Toggle Section */}
+            <div className='text-center pt-4 border-t border-gray-200'>
+              <p className='text-gray-600 text-sm'>
+                {state === 'Sign Up'
+                  ? "Already have an account? "
+                  : "Don't have an account? "
+                }
+                <button
+                  type="button"
+                  onClick={() => setState(state === 'Sign Up' ? 'Login' : 'Sign Up')}
+                  className='text-[#037c6e] font-semibold hover:text-[#026157] transition-colors duration-200 hover:underline'
+                >
+                  {state === 'Sign Up' ? "Sign in here" : "Create one here"}
+                </button>
+              </p>
+            </div>
+          </div>
+        </form>
+
+        {/* Footer */}
+        <div className='text-center mt-6'>
+          <p className='text-gray-500 text-xs'>
+            Secure and trusted by thousands of users
+          </p>
         </div>
-        <div className='w-full'>
-          <p>Password</p>
-          <input className='outline-none border border-zinc-300 rounded w-full p-2 mt-1 hover:border-[#037c6e]' type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        </div>
-        <button className='bg-[#037c6e] text-white w-full py-2 rounded-md text-base'>{state === 'Sign Up' ? "Create Account" : "Login"}</button>
-        {
-          state === 'Sign Up'
-            ? <p>Already have an Account ? <span onClick={() => setState('Login')} className='text-[#037c6e] underline cursor-pointer'>Login here</span></p>
-            : <p>Create an new account? <span onClick={() => setState('Sign Up')} className='text-[#037c6e] underline cursor-pointer'>click here</span></p>
-        }
       </div>
-    </form>
+    </div>
   )
 }
 

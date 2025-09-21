@@ -13,6 +13,7 @@ import Footer from './components/Footer'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css';
 import Chatbot from './components/Chatbot'
+import Notification from './components/Notification'
 
 
 
@@ -33,6 +34,7 @@ const App = () => {
         <Route path='/my-appointments' element={<MyAppointments />} />
         <Route path='/appointment/:docId' element={<Appointment />} />
         <Route path='/chatbot' element={<Chatbot />} />
+          <Route path='/notification' element={<Notification />} />
        
       </Routes>
       <Footer />
