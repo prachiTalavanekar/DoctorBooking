@@ -340,75 +340,53 @@ const BookingTime = ({
         Choose a <span style={{ color: '#037c6e' }}>Date & Time</span>
       </h1>
 
-      {/* Table layout */}
-      <div className="overflow-x-auto mt-6 rounded-lg border border-gray-200">
-        <table className="w-full border-collapse">
-          <thead className="bg-[#7dd1b3]/20">
-            <tr>
-              <th className="border-b border-gray-300 px-6 py-4 text-left text-sm font-semibold text-[#7dd1b3]">
-                Date
-              </th>
-              <th className="border-b border-gray-300 px-6 py-4 text-left text-sm font-semibold text-[#7dd1b3]">
-                Available Time Slots
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {docSlots.length > 0 &&
-              docSlots.map((daySlots, idx) => (
-                <tr
-                  key={idx}
-                  onClick={() => setSlotIndex(idx)}
-                  className={`cursor-pointer ${slotIndex === idx ? 'bg-[#7dd1b3]/30' : 'hover:bg-[#7dd1b3]/10'
-                    } transition-colors duration-200`}
-                >
-                  <td className="border-b border-gray-200 px-6 py-4 align-middle">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-[#7dd1b3]">
-                        {daySlots[0] && daysOfWeek[daySlots[0].datetime.getDay()]}
-                      </span>
-                      <span className="text-2xl font-extrabold text-gray-900">
-                        {daySlots[0] && daySlots[0].datetime.getDate()}
-                      </span>
-                      <span className="text-xs text-gray-400 mt-1">
-                        {daySlots[0] && daySlots[0].datetime.toLocaleDateString()}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="border-b border-gray-200 px-6 py-4">
-                    <div className="flex flex-wrap gap-3">
-                      {daySlots.map((slot, i) => (
-                        <button
-                          key={i}
-                          onClick={e => {
-                            e.stopPropagation()
-                            setSlotTime(slot.time)
-                            setSlotIndex(idx)
-                          }}
-                          className={`px-4 py-2 rounded-full text-sm font-medium border transition duration-150 whitespace-nowrap ${slot.time === slotTime
-                              ? 'bg-[#7dd1b3] text-gray-900 border-transparent shadow-md'
-                              : 'border-gray-300 text-gray-600 hover:bg-[#7dd1b3]/20 hover:border-[#7dd1b3]'
-                            }`}
-                        >
-                          {slot.time.toLowerCase()}
-                        </button>
-                      ))}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
+      {/* Step 1: pick a date */}
+      <div className="mt-6">
+        <p className="text-sm font-semibold text-[#037c6e] mb-3">Select a date</p>
+        <div className="flex gap-3 items-stretch w-full overflow-x-auto">
+          {docSlots.length > 0 && docSlots.map((daySlots, idx) => (
+            <button
+              key={idx}
+              onClick={() => { setSlotIndex(idx); }}
+              className={`min-w-28 px-4 py-3 rounded-xl border text-left transition ${slotIndex === idx ? 'bg-[#7dd1b3] text-gray-900 border-transparent shadow' : 'border-gray-200 text-gray-700 hover:bg-[#7dd1b3]/10'}`}
+            >
+              <div className="text-xs font-semibold text-[#066b5f]">
+                {daySlots[0] && daysOfWeek[daySlots[0].datetime.getDay()]}
+              </div>
+              <div className="text-2xl font-extrabold">
+                {daySlots[0] && daySlots[0].datetime.getDate()}
+              </div>
+              <div className="text-[11px] text-gray-500 mt-1">
+                {daySlots[0] && daySlots[0].datetime.toLocaleDateString()}
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
+
+      {/* Step 2: show times only after date selection */}
+      {docSlots.length > 0 && docSlots[slotIndex] && (
+        <div className="mt-8">
+          <p className="text-sm font-semibold text-[#037c6e] mb-3">Available time slots</p>
+          <div className="flex flex-wrap gap-3">
+            {docSlots[slotIndex].map((slot, i) => (
+              <button
+                key={i}
+                onClick={() => setSlotTime(slot.time)}
+                className={`px-4 py-2 rounded-full text-sm font-medium border transition whitespace-nowrap ${slot.time === slotTime ? 'bg-[#7dd1b3] text-gray-900 border-transparent shadow' : 'border-gray-300 text-gray-700 hover:bg-[#7dd1b3]/20 hover:border-[#7dd1b3]'}`}
+              >
+                {slot.time.toLowerCase()}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mt-12 flex justify-center">
         <button
           onClick={bookAppointment}
           disabled={!slotTime}
-          className={`rounded-full px-24 py-3 text-lg font-semibold transition-colors duration-300 ${slotTime
-              ? 'bg-[#7dd1b3] text-gray-900 hover:brightness-110 shadow-lg'
-              : 'bg-[#7dd1b3]/60 text-gray-900 cursor-not-allowed'
-            }`}
+          className={`rounded-full px-24 py-3 text-lg font-semibold transition-colors duration-300 ${slotTime ? 'bg-[#7dd1b3] text-gray-900 hover:brightness-110 shadow-lg' : 'bg-[#7dd1b3]/60 text-gray-900 cursor-not-allowed'}`}
         >
           Book an Appointment
         </button>

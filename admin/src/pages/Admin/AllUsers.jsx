@@ -142,7 +142,7 @@ const AllUsers = () => {
   }, []);
 
   return (
-    <div className="m-6 w-full">
+    <div className="m-5 max-w-full overflow-x-auto">
       <h1 className="text-xl font-semibold mb-6">All Users</h1>
       <div className="overflow-y-scroll">
         <table className="min-w-full border border-gray-300 text-sm rounded overflow-hidden">

@@ -2,18 +2,20 @@ import React, { useContext, useEffect, useMemo, useState } from 'react'
 import { DoctorContext } from '../../context/DoctorContext'
 
 const DoctorNotifications = () => {
-  const { getNotificationRecipients, sendDoctorNotification, getDoctorInbox, markDoctorNotificationRead } = useContext(DoctorContext)
+  const { getNotificationRecipients, sendDoctorNotification, getDoctorInbox, markDoctorNotificationRead, getDoctorSent } = useContext(DoctorContext)
   const [recipients, setRecipients] = useState([])
   const [search, setSearch] = useState('')
   const [selectedIds, setSelectedIds] = useState([])
   const [message, setMessage] = useState('')
   const [inbox, setInbox] = useState([])
+  const [sent, setSent] = useState([])
 
   const load = async () => {
     const r = await getNotificationRecipients()
     setRecipients(r)
-    const i = await getDoctorInbox()
+    const [i, s] = await Promise.all([getDoctorInbox(), getDoctorSent()])
     setInbox(i)
+    setSent(s)
   }
 
   useEffect(() => { load() }, [])
@@ -32,8 +34,9 @@ const DoctorNotifications = () => {
     if (ok) {
       setMessage('')
       setSelectedIds([])
-      const i = await getDoctorInbox()
+      const [i, s] = await Promise.all([getDoctorInbox(), getDoctorSent()])
       setInbox(i)
+      setSent(s)
     }
   }
 
@@ -78,6 +81,28 @@ const DoctorNotifications = () => {
                   </div>
                   <div className="mt-1">{n.message}</div>
                   {!n.isRead && <button onClick={() => markRead(n._id)} className="mt-2 text-xs px-2 py-1 rounded bg-[#037c6e] text-white">Mark as read</button>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="bg-white rounded-md shadow p-4">
+          <h2 className="text-xl font-semibold text-[#037c6e] mb-3">Sent</h2>
+          {sent.length === 0 ? (
+            <div className="text-sm text-gray-500">No sent notifications</div>
+          ) : (
+            <ul className="space-y-3 max-h-[70vh] overflow-y-auto">
+              {sent.map(n => (
+                <li key={n._id} className="border rounded p-3">
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>To: {n.userId?.name || 'Patient'}</span>
+                    <span className="text-xs text-gray-400">{new Date(n.timestamp).toLocaleString()}</span>
+                  </div>
+                  <div className="mt-1">{n.message}</div>
+                  <div className="mt-2 text-xs">
+                    Status: <span className={n.isRead ? 'text-green-700' : 'text-gray-600'}>{n.isRead ? 'Read' : 'Unread'}</span>
+                  </div>
                 </li>
               ))}
             </ul>

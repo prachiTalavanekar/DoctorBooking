@@ -229,6 +229,14 @@ const DoctorContextProvider = (props) => {
     } catch { return false }
   }
 
+  const getDoctorSent = async () => {
+    try {
+      const { data } = await axios.get(`${backendUrl}/api/doctor/notification/sent`, { headers: { Authorization: `Bearer ${dToken}` } })
+      if (data.success) return data.notifications
+      return []
+    } catch { return [] }
+  }
+
 
   const value = {
     dToken,
@@ -252,6 +260,7 @@ const DoctorContextProvider = (props) => {
     sendDoctorNotification,
     getDoctorInbox,
     markDoctorNotificationRead,
+    getDoctorSent,
     // unread helper
     async getDoctorUnreadCount() {
       try {

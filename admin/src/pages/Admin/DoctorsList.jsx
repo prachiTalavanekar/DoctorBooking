@@ -182,7 +182,7 @@ const DoctorsList = () => {
   }, [aToken])
 
   return (
-    <div className="m-5 max-h-[90vh] overflow-y-auto w-full">
+    <div className="m-5 max-h-[90vh] overflow-y-auto max-w-full overflow-x-auto">
       <h1 className="text-lg font-medium mb-5">All Doctors</h1>
 
       <div className="w-full overflow-x-auto rounded-md border border-[#2fb5a5]/40">

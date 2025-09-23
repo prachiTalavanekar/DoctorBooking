@@ -100,7 +100,9 @@ export const getDoctorInbox = async (req, res) => {
   try {
     const docId = req.docId
     const items = await notificationModel
-      .find({ docId })
+      // Show only notifications addressed to the doctor (e.g. from admin/system),
+      // not the ones the doctor sent to patients
+      .find({ docId, sentBy: { $ne: 'doctor' } })
       .sort({ timestamp: -1 })
       .populate('userId', 'name email')
     res.json({ success: true, notifications: items })
@@ -126,6 +128,21 @@ export const markDoctorNotificationRead = async (req, res) => {
     res.json({ success: true })
   } catch (error) {
     console.error('markDoctorNotificationRead error:', error)
+    res.status(500).json({ success: false, message: error.message })
+  }
+}
+
+// Doctor: sent notifications (messages the doctor sent to patients)
+export const getDoctorSentNotifications = async (req, res) => {
+  try {
+    const docId = req.docId
+    const items = await notificationModel
+      .find({ docId, sentBy: 'doctor' })
+      .sort({ timestamp: -1 })
+      .populate('userId', 'name email')
+    res.json({ success: true, notifications: items })
+  } catch (error) {
+    console.error('getDoctorSentNotifications error:', error)
     res.status(500).json({ success: false, message: error.message })
   }
 }
