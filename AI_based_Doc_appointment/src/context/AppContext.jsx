@@ -13,6 +13,7 @@ const AppContextProvider = (props) => {
   const [doctors, setDoctors] = useState([])
   const [token, setToken] = useState(localStorage.getItem('token') ? localStorage.getItem('token') : false)
   const [userData, setUserData] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
 
 
@@ -55,6 +56,20 @@ const AppContextProvider = (props) => {
     }
   }
 
+  const refreshUnreadCount = async () => {
+    try {
+      if (!token) { setUnreadCount(0); return }
+      const { data } = await axios.get(backendUrl + '/api/user/notification/inbox',
+        { headers: { Authorization: `Bearer ${token}` } })
+      if (data.success) {
+        const count = (data.notifications || []).filter(n => !n.isRead).length
+        setUnreadCount(count)
+      }
+    } catch (e) {
+      // silent
+    }
+  }
+
 
 
   const value = {
@@ -62,7 +77,9 @@ const AppContextProvider = (props) => {
     token, setToken,
     backendUrl,
     userData,setUserData,
-    loadUserProfileData
+    loadUserProfileData,
+    unreadCount,
+    refreshUnreadCount
   }
 
 
@@ -74,10 +91,20 @@ const AppContextProvider = (props) => {
   useEffect(() => {
   if (token) {
     loadUserProfileData();
+    refreshUnreadCount();
   } else {
     setUserData(false);
+    setUnreadCount(0)
   }
 }, [token]);
+
+  useEffect(() => {
+    if (!token) return
+    const id = setInterval(() => { refreshUnreadCount() }, 30000)
+    const handler = () => refreshUnreadCount()
+    window.addEventListener('refresh-unread', handler)
+    return () => clearInterval(id)
+  }, [token])
 
 
   return (

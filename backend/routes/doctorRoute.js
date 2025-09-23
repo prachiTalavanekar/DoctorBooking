@@ -1,5 +1,6 @@
 import express from 'express'
 import { appointmentCancel, appointmentComplete, appointmentsDoctor, doctorList, loginDoctor, doctorDashboard, doctorProfile, updateDoctorProfile } from '../controllers/doctorController.js'
+import { getDoctorRecipients, doctorSendNotification, getDoctorInbox, markDoctorNotificationRead } from '../controllers/notificationController.js'
 import authDoctor from '../middlewares/authDoctor.js'
 
 const doctorRouter = express.Router()
@@ -12,5 +13,11 @@ doctorRouter.post('/cancel-appointment',authDoctor,appointmentCancel)
 doctorRouter.get('/dashboard',authDoctor,doctorDashboard)
 doctorRouter.get('/profile',authDoctor,doctorProfile)
 doctorRouter.put('/profile',authDoctor,updateDoctorProfile)
+
+// Notifications (Doctor)
+doctorRouter.get('/notification/recipients', authDoctor, getDoctorRecipients)
+doctorRouter.post('/notification/send', authDoctor, doctorSendNotification)
+doctorRouter.get('/notification/inbox', authDoctor, getDoctorInbox)
+doctorRouter.post('/notification/mark-read', authDoctor, markDoctorNotificationRead)
 
 export default doctorRouter

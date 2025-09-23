@@ -9,7 +9,7 @@ const Navbar = () => {
 
     const navigate = useNavigate();
 
-    const { token, setToken, userData } = useContext(AppContext)
+    const { token, setToken, userData, unreadCount, refreshUnreadCount } = useContext(AppContext)
     const [showMenu, setShowMenu] = useState(false)
     // const [token, setToken] = useState(true)
 
@@ -42,8 +42,15 @@ const Navbar = () => {
                     <hr className='border-none outline-none h-0.5 bg-[#B0DB9C] w-3/5 m-auto hidden' />
 
                 </NavLink>
-                <NavLink to='/notification'>
-                    <IoNotifications className="text-2xl cursor-pointer text-[#037c6e]" />
+                <NavLink to='/notification' onClick={() => setTimeout(refreshUnreadCount, 500)}>
+                    <div className="relative">
+                        <IoNotifications className="text-2xl cursor-pointer text-[#037c6e]" />
+                        {unreadCount > 0 && (
+                            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] leading-none px-1.5 py-0.5 rounded-full">
+                                {unreadCount}
+                            </span>
+                        )}
+                    </div>
                 </NavLink>
 
                 {/* Mobile Menu Button */}

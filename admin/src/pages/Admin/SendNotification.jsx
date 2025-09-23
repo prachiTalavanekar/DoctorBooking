@@ -1,35 +1,49 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
+import { AdminContext } from '../../context/AdminContext';
 
 const SendNotification = () => {
   const [activeTab, setActiveTab] = useState('doctors');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [notificationText, setNotificationText] = useState('');
-  const [notificationHistory, setNotificationHistory] = useState([]);
+  const [recipients, setRecipients] = useState([]);
+  const [history, setHistory] = useState([]);
+  const { getNotificationRecipients, sendAdminNotification, getAdminNotificationHistory } = useContext(AdminContext);
 
-  const dummyDoctors = ['Dr. Smith', 'Dr. Johnson', 'Dr. Lee'];
-  const dummyPatients = ['John Doe', 'Jane Smith', 'Alice Johnson'];
+  useEffect(() => {
+    const load = async () => {
+      setSelectedIds([]);
+      setSearchQuery('');
+      const list = await getNotificationRecipients(activeTab);
+      setRecipients(list);
+      const h = await getAdminNotificationHistory();
+      setHistory(h);
+    };
+    load();
+  }, [activeTab]);
 
-  const handleSearch = () => {
-    const list = activeTab === 'doctors' ? dummyDoctors : dummyPatients;
-    const found = list.find(name => name.toLowerCase().includes(searchQuery.toLowerCase()));
-    setSelectedUser(found || null);
+  const filteredRecipients = useMemo(() => {
+    if (!searchQuery) return recipients;
+    const q = searchQuery.toLowerCase();
+    return recipients.filter(r => r.name?.toLowerCase().includes(q) || r.email?.toLowerCase().includes(q));
+  }, [recipients, searchQuery]);
+
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const handleSendNotification = () => {
-    if (selectedUser && notificationText.trim()) {
-      const newNotification = {
-        id: Date.now(),
-        recipient: selectedUser,
-        type: activeTab,
-        message: notificationText,
-        timestamp: new Date().toLocaleString(),
-      };
-
-      setNotificationHistory([newNotification, ...notificationHistory]);
-      setSearchQuery('');
-      setSelectedUser(null);
+  const handleSendNotification = async () => {
+    if (selectedIds.length === 0 || !notificationText.trim()) return;
+    const ok = await sendAdminNotification({
+      recipientType: activeTab === 'doctors' ? 'doctor' : 'user',
+      recipientIds: selectedIds,
+      message: notificationText.trim(),
+    });
+    if (ok) {
       setNotificationText('');
+      setSelectedIds([]);
+      const h = await getAdminNotificationHistory();
+      setHistory(h);
     }
   };
 
@@ -48,7 +62,7 @@ const SendNotification = () => {
                 onClick={() => {
                   setActiveTab(tab);
                   setSearchQuery('');
-                  setSelectedUser(null);
+                  setSelectedIds([]);
                   setNotificationText('');
                 }}
                 className={`px-4 py-2 rounded-md font-medium transition-colors duration-200 ${
@@ -75,55 +89,68 @@ const SendNotification = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <button
-                onClick={handleSearch}
-                className="px-4 py-2 bg-[#037c6e] text-white rounded-md hover:bg-[#02665d] transition"
-              >
-                Search
-              </button>
             </div>
           </div>
 
+          {/* Recipients list */}
+          <div className="border rounded-md max-h-64 overflow-y-auto">
+            {filteredRecipients.map(r => (
+              <label key={r._id} className="flex items-center gap-3 p-2 border-b last:border-b-0">
+                <input type="checkbox" checked={selectedIds.includes(r._id)} onChange={() => toggleSelect(r._id)} />
+                <div className="flex items-center gap-3">
+                  {r.image ? <img src={r.image} className="w-8 h-8 rounded-full" /> : <div className="w-8 h-8 rounded-full bg-gray-200" />}
+                  <div>
+                    <div className="font-medium">{r.name}</div>
+                    <div className="text-xs text-gray-500">{r.email}</div>
+                  </div>
+                </div>
+              </label>
+            ))}
+            {filteredRecipients.length === 0 && (
+              <div className="p-3 text-sm text-gray-500">No recipients</div>
+            )}
+          </div>
+
           {/* Notification Input */}
-          {selectedUser && (
-            <div className="mt-4">
-              <p className="mb-2 text-sm text-gray-600">
-                Selected {activeTab === 'doctors' ? 'Doctor' : 'Patient'}: <strong>{selectedUser}</strong>
-              </p>
-              <textarea
-                rows="4"
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#037c6e]"
-                placeholder="Type your notification here..."
-                value={notificationText}
-                onChange={(e) => setNotificationText(e.target.value)}
-              ></textarea>
-              <button
-                onClick={handleSendNotification}
-                className="mt-3 px-4 py-2 bg-[#037c6e] text-white rounded-md hover:bg-[#02665d] transition"
-              >
-                Send Notification
-              </button>
-            </div>
-          )}
+          <div className="mt-4">
+            <textarea
+              rows="4"
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#037c6e]"
+              placeholder="Type your notification here..."
+              value={notificationText}
+              onChange={(e) => setNotificationText(e.target.value)}
+            ></textarea>
+            <button
+              onClick={handleSendNotification}
+              className="mt-3 px-4 py-2 bg-[#037c6e] text-white rounded-md hover:bg-[#02665d] transition"
+            >
+              Send Notification
+            </button>
+          </div>
         </div>
 
         {/* Right: Notification History */}
         <div className="flex-1 bg-white shadow-md rounded-md p-6">
           <h2 className="text-2xl font-bold mb-4 text-[#037c6e]">Notification History</h2>
 
-          {notificationHistory.length === 0 ? (
+          {history.length === 0 ? (
             <p className="text-gray-500">No notifications sent yet.</p>
           ) : (
             <ul className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
-              {notificationHistory.map((item) => (
-                <li key={item.id} className="border border-gray-200 p-4 rounded-md">
+              {history.map((item) => (
+                <li key={item._id} className="border border-gray-200 p-4 rounded-md">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-gray-600">
-                      {item.type === 'doctors' ? 'Doctor' : 'Patient'}: <strong>{item.recipient}</strong>
+                      To: <strong>{item.docId?.name || item.userId?.name}</strong>
                     </span>
-                    <span className="text-xs text-gray-400">{item.timestamp}</span>
+                    <span className="text-xs text-gray-400">{new Date(item.timestamp).toLocaleString()}</span>
                   </div>
                   <p className="text-gray-800">{item.message}</p>
+                  {item.isRead ? (
+                    <span className="mt-2 inline-block text-xs text-green-600">Seen</span>
+                  ) : (
+                    <span className="mt-2 inline-block text-xs text-orange-600">Unseen</span>
+                  )}
                 </li>
               ))}
             </ul>

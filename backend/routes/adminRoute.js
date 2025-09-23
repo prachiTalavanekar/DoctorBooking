@@ -10,7 +10,8 @@
 
 
 import express from 'express';
-import { addDoctor, allDoctors, allUsers, deleteUser, loginAdmin , getTotalUsers, getTotalDoctors, getAppointmentsCount, appointmentsAdmin, appointmentCancel ,getLatestAppointments,getCancelledAppointmentsCount} from '../controllers/adminController.js';
+import { addDoctor, allDoctors, allUsers, deleteUser, loginAdmin , getTotalUsers, getTotalDoctors, getAppointmentsCount, appointmentsAdmin, appointmentCancel ,getLatestAppointments,getCancelledAppointmentsCount, getAppointmentAnalytics} from '../controllers/adminController.js';
+import { getAdminRecipients, adminSendNotification, getAdminNotifications } from '../controllers/notificationController.js';
 import upload from '../middlewares/multer.js';
 import authAdmin from '../middlewares/authAdmin.js';
 import { changeAvailability } from '../controllers/doctorController.js';
@@ -34,6 +35,12 @@ adminRouter.get('/appointment-list',authAdmin,appointmentsAdmin)
 adminRouter.post('/cancel-appointment',authAdmin,appointmentCancel)
 adminRouter.get("/latest-appointments", authAdmin, getLatestAppointments);
 adminRouter.get("/stats/cancelled-appointments", getCancelledAppointmentsCount);
+adminRouter.get('/analytics/appointments', authAdmin, getAppointmentAnalytics)
+
+// Notifications (Admin)
+adminRouter.get('/notification/recipients', authAdmin, getAdminRecipients) // ?type=doctors|patients
+adminRouter.post('/notification/send', authAdmin, adminSendNotification) // {recipientType:'doctor'|'user', recipientIds:[], message}
+adminRouter.get('/notification/history', authAdmin, getAdminNotifications)
 
 
 

@@ -196,15 +196,19 @@ const DoctorsList = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {doctors.map((item, index) => (
+            {(Array.isArray(doctors) ? doctors : []).map((item, index) => (
               <tr key={index} className="hover:bg-[#e3fcf3]/60 transition">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-12 h-12 rounded-full object-cover border-2 border-[#2fb5a5]/50 bg-[#e3fcf3]"
-                    />
+                    {item?.image ? (
+                      <img
+                        src={item.image}
+                        alt={item?.name || 'Doctor'}
+                        className="w-12 h-12 rounded-full object-cover border-2 border-[#2fb5a5]/50 bg-[#e3fcf3]"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full border-2 border-[#2fb5a5]/50 bg-[#e3fcf3]"></div>
+                    )}
                   </div>
                 </td>
                 <td className="px-6 py-4 font-medium text-gray-800">{item.name}</td>

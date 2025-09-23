@@ -75,6 +75,7 @@ import doctorModel from '../modals/doctorModel.js';
 import userModel from '../modals/userModel.js';
 import jwt from 'jsonwebtoken'
 import appointmentModel from '../modals/appointmentModel.js'
+import mongoose from 'mongoose'
 
 const addDoctor = async (req, res) => {
     try {
@@ -150,7 +151,7 @@ const loginAdmin = async (req, res) => {
         if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
             // res.json({ success: true, message: "Login successful" });
 
-            const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "1d" });
+            const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "30d" });
             res.json({ success: true, token });
 
         } else {
@@ -379,8 +380,87 @@ const getCancelledAppointmentsCount = async (req, res) => {
   }
 };
 
+// Real-time analytics for admin dashboard
+const getAppointmentAnalytics = async (req, res) => {
+  try {
+    // Prepare boundaries
+    const today = new Date()
+    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+
+    // Helper to parse slotDate string which can be 'YYYY-MM-DD' or 'DD-MM-YYYY'
+    const toDate = (slotDate) => {
+      if (!slotDate || typeof slotDate !== 'string') return null
+      if (slotDate.includes('-')) {
+        const parts = slotDate.split('-')
+        if (parts[0].length === 4) {
+          return new Date(slotDate)
+        } else if (parts[2]?.length === 4) {
+          return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`)
+        }
+      }
+      const d = new Date(slotDate)
+      return isNaN(d.getTime()) ? null : d
+    }
+
+    const all = await appointmentModel.find({}, 'slotDate cancelled').lean()
+
+    // Daily: last 7 days including today — count unique users with appointments
+    const daily = []
+    for (let i = 6; i >= 0; i--) {
+      const day = new Date(startOfToday)
+      day.setDate(day.getDate() - i)
+      const dayStr = day.toISOString().slice(0,10)
+      const users = new Set(all.filter(a => {
+        const d = toDate(a.slotDate)
+        if (!d) return false
+        const s = d.toISOString().slice(0,10)
+        return !a.cancelled && s === dayStr
+      }).map(x => x.userId))
+      daily.push({ label: day.toLocaleDateString('en-US',{ weekday:'short'}), value: users.size, date: dayStr })
+    }
+
+    // Weekly: last 4 weeks — count unique users per week
+    const weekly = []
+    const endOfThisWeek = new Date(startOfToday)
+    // align to end of week (Saturday) by adding (6 - dayOfWeek)
+    const dayOfWeek = endOfThisWeek.getDay()
+    endOfThisWeek.setDate(endOfThisWeek.getDate() + (6 - dayOfWeek))
+    for (let w = 3; w >= 0; w--) {
+      const weekEnd = new Date(endOfThisWeek)
+      weekEnd.setDate(weekEnd.getDate() - 7 * (3 - w))
+      const weekStart = new Date(weekEnd)
+      weekStart.setDate(weekEnd.getDate() - 6)
+      const users = new Set(all.filter(a => {
+        const d = toDate(a.slotDate)
+        return d && !a.cancelled && d >= weekStart && d <= weekEnd
+      }).map(x => x.userId))
+      weekly.push({ label: `Week ${4 - w}`, value: users.size, period: `${weekStart.toLocaleDateString()} - ${weekEnd.toLocaleDateString()}` })
+    }
+
+    // Monthly: last 6 months — count unique users per month
+    const monthly = []
+    const base = new Date(startOfToday)
+    for (let m = 5; m >= 0; m--) {
+      const dt = new Date(base)
+      dt.setMonth(dt.getMonth() - m, 1)
+      const start = new Date(dt.getFullYear(), dt.getMonth(), 1)
+      const end = new Date(dt.getFullYear(), dt.getMonth() + 1, 0, 23, 59, 59, 999)
+      const users = new Set(all.filter(a => {
+        const d = toDate(a.slotDate)
+        return d && !a.cancelled && d >= start && d <= end
+      }).map(x => x.userId))
+      monthly.push({ label: dt.toLocaleDateString('en-US',{ month:'short'}), value: users.size, month: `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}` })
+    }
+
+    res.json({ success: true, daily, weekly, monthly })
+  } catch (error) {
+    console.error('getAppointmentAnalytics error:', error)
+    res.status(500).json({ success: false, message: error.message })
+  }
+}
 
 
-export { addDoctor, loginAdmin, allDoctors, allUsers, deleteUser , getTotalUsers, getTotalDoctors  ,getAppointmentsCount , appointmentsAdmin ,appointmentCancel, adminDashboard , getLatestAppointments ,getCancelledAppointmentsCount  };
+
+export { addDoctor, loginAdmin, allDoctors, allUsers, deleteUser , getTotalUsers, getTotalDoctors  ,getAppointmentsCount , appointmentsAdmin ,appointmentCancel, adminDashboard , getLatestAppointments ,getCancelledAppointmentsCount, getAppointmentAnalytics };
 
 

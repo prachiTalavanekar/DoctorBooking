@@ -62,8 +62,12 @@ const notificationSchema = new mongoose.Schema({
   },
   sentBy: {
     type: String,
-    enum: ["admin", "system"],
+    enum: ["admin", "doctor", "system"],
     default: "admin",
+  },
+  isRead: {
+    type: Boolean,
+    default: false,
   },
   timestamp: {
     type: Date,

@@ -242,11 +242,26 @@ const getCancelledAppointmentsCount = async () => {
   }
 };
 
+  const getAppointmentAnalytics = async () => {
+    try {
+      const { data } = await axios.get(`${backendUrl}/api/admin/analytics/appointments`, {
+        headers: { Authorization: `Bearer ${aToken}` },
+      })
+      if (data.success) return data
+      toast.error(data.message || 'Failed to fetch analytics')
+      return { daily: [], weekly: [], monthly: [] }
+    } catch (error) {
+      toast.error(error.message)
+      return { daily: [], weekly: [], monthly: [] }
+    }
+  }
+
 
   const value = {
     aToken,
     setAToken,
     backendUrl,
+    doctors, setDoctors,
     getAllDoctors, changeAvailability,
     deleteUser,
     getAllUsers,
@@ -259,14 +274,51 @@ const getCancelledAppointmentsCount = async () => {
    getLatestAppointments,
    latestAppointments,
    setLatestAppointments,
-   getCancelledAppointmentsCount
+   getCancelledAppointmentsCount,
+   getAppointmentAnalytics,
+   // Notifications (Admin)
+   async getNotificationRecipients(type){
+     try {
+       const { data } = await axios.get(`${backendUrl}/api/admin/notification/recipients`, { params: { type }, headers: { Authorization: `Bearer ${aToken}` } })
+       if (data.success) return data.recipients
+       toast.error(data.message || 'Failed to fetch recipients')
+       return []
+     } catch (error) {
+       toast.error(error.message)
+       return []
+     }
+   },
+   async sendAdminNotification({ recipientType, recipientIds, message }){
+     try {
+       const { data } = await axios.post(`${backendUrl}/api/admin/notification/send`, { recipientType, recipientIds, message }, { headers: { Authorization: `Bearer ${aToken}` } })
+       if (data.success) {
+         toast.success('Notification sent')
+         return true
+       }
+       toast.error(data.message || 'Failed to send notification')
+       return false
+     } catch (error) {
+       toast.error(error.message)
+       return false
+     }
+   },
+   async getAdminNotificationHistory(){
+     try {
+       const { data } = await axios.get(`${backendUrl}/api/admin/notification/history`, { headers: { Authorization: `Bearer ${aToken}` } })
+       if (data.success) return data.notifications
+       toast.error(data.message || 'Failed to fetch history')
+       return []
+     } catch (error) {
+       toast.error(error.message)
+       return []
+     }
+   }
 
   };
 
 
   return (
-    <AdminContext.Provider value={{ backendUrl, setAToken, doctors, aToken, getAllDoctors, changeAvailability, deleteUser, getAllUsers, getDoctorCount, getUserCount, getAppointmentsCount, getAllAppointments, appointments, setAppointments,cancelAppointment ,getLatestAppointments,latestAppointments,
-   setLatestAppointments , getCancelledAppointmentsCount }}>
+    <AdminContext.Provider value={value}>
       {props.children}
     </AdminContext.Provider>
   );

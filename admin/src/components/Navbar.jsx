@@ -46,6 +46,7 @@ import { assets } from '../assets_admin/assets'
 import { AdminContext } from '../context/AdminContext'
 import { DoctorContext } from '../context/DoctorContext'
 import { useNavigate } from 'react-router-dom'
+import { IoNotifications } from 'react-icons/io5'
 
 const Navbar = ({ onMobileMenuToggle }) => {
   const { aToken, setAToken } = useContext(AdminContext)
@@ -67,6 +68,59 @@ const Navbar = ({ onMobileMenuToggle }) => {
 
     // Redirect back to login
     navigate('/')
+  }
+
+  const [unread, setUnread] = useState(0)
+
+  const refreshUnread = async () => {
+    if (!dToken) { setUnread(0); return }
+    try {
+      const { getDoctorUnreadCount } = await import('../context/DoctorContext')
+    } catch {}
+  }
+
+  // simple effect
+  React.useEffect(() => {
+    let mounted = true
+    const load = async () => {
+      if (!dToken) { if (mounted) setUnread(0); return }
+      try {
+        // naive call using context
+        const list = await (await fetchUnread())
+        if (mounted) setUnread(list)
+      } catch { if (mounted) setUnread(0) }
+    }
+    const fetchUnread = async () => {
+      try {
+        const { getDoctorUnreadCount } = require('../context/DoctorContext')
+        // fallback: use context value
+        if (typeof getDoctorUnreadCount !== 'function') {
+          // use context instance method
+          // no-op; handled below via dToken
+        }
+      } catch {}
+      if (typeof window !== 'undefined') {
+        // use context method on instance
+        try {
+          const { getDoctorUnreadCount } = require('../context/DoctorContext')
+        } catch {}
+      }
+      // use value from context instance
+      try {
+        const count = await (typeof (doctorUnread) === 'function' ? doctorUnread() : 0)
+        return count
+      } catch { return 0 }
+    }
+    load()
+    const id = setInterval(load, 30000)
+    return () => { mounted = false; clearInterval(id) }
+  }, [dToken])
+
+  // derive helper using context functions directly
+  const doctorUnread = DoctorContext?._currentValue?.getDoctorUnreadCount
+
+  const goDoctorNotifications = () => {
+    navigate('/doctor-notifications')
   }
 
   return (
@@ -95,12 +149,22 @@ const Navbar = ({ onMobileMenuToggle }) => {
         </div>
       </div>
 
-      <button
-        onClick={logout}
-        className="bg-[#037c6e] text-white text-sm px-6 sm:px-10 py-2 rounded-full cursor-pointer hover:bg-[#026157] transition-colors"
-      >
-        Logout
-      </button>
+      <div className="flex items-center gap-4">
+        {dToken && (
+          <button onClick={goDoctorNotifications} className="relative p-2 rounded hover:bg-gray-100">
+            <IoNotifications className="text-2xl text-[#037c6e]" />
+            {unread > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{unread}</span>
+            )}
+          </button>
+        )}
+        <button
+          onClick={logout}
+          className="bg-[#037c6e] text-white text-sm px-6 sm:px-10 py-2 rounded-full cursor-pointer hover:bg-[#026157] transition-colors"
+        >
+          Logout
+        </button>
+      </div>
     </div>
   )
 }

@@ -189,6 +189,46 @@ const DoctorContextProvider = (props) => {
     }
   };
 
+  // Notifications (Doctor)
+  const getNotificationRecipients = async () => {
+    try {
+      const { data } = await axios.get(`${backendUrl}/api/doctor/notification/recipients`, { headers: { Authorization: `Bearer ${dToken}` } })
+      if (data.success) return data.recipients
+      toast.error(data.message || 'Failed to fetch recipients')
+      return []
+    } catch (error) {
+      toast.error(error.message)
+      return []
+    }
+  }
+
+  const sendDoctorNotification = async ({ userIds, message }) => {
+    try {
+      const { data } = await axios.post(`${backendUrl}/api/doctor/notification/send`, { userIds, message }, { headers: { Authorization: `Bearer ${dToken}` } })
+      if (data.success) { toast.success('Notification sent'); return true }
+      toast.error(data.message || 'Failed to send')
+      return false
+    } catch (error) {
+      toast.error(error.message)
+      return false
+    }
+  }
+
+  const getDoctorInbox = async () => {
+    try {
+      const { data } = await axios.get(`${backendUrl}/api/doctor/notification/inbox`, { headers: { Authorization: `Bearer ${dToken}` } })
+      if (data.success) return data.notifications
+      return []
+    } catch { return [] }
+  }
+
+  const markDoctorNotificationRead = async (notificationId) => {
+    try {
+      await axios.post(`${backendUrl}/api/doctor/notification/mark-read`, { notificationId }, { headers: { Authorization: `Bearer ${dToken}` } })
+      return true
+    } catch { return false }
+  }
+
 
   const value = {
     dToken,
@@ -206,7 +246,19 @@ const DoctorContextProvider = (props) => {
     setDoctorProfile,
     getDoctorProfile,
     updateDoctorProfile,
-    loading
+    loading,
+    // notifications
+    getNotificationRecipients,
+    sendDoctorNotification,
+    getDoctorInbox,
+    markDoctorNotificationRead,
+    // unread helper
+    async getDoctorUnreadCount() {
+      try {
+        const list = await getDoctorInbox()
+        return list.filter(n => !n.isRead).length
+      } catch { return 0 }
+    }
   }
 
 

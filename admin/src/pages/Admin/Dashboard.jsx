@@ -26,7 +26,7 @@ import RightPanel from "../../components/RightPanel.jsx";
 import { AdminContext } from "../../context/AdminContext.jsx";
 
 const Dashboard = () => {
-  const { appointments, getAllAppointments } = useContext(AdminContext);
+  const { appointments, getAllAppointments, getAppointmentAnalytics } = useContext(AdminContext);
   const [chartData, setChartData] = useState({
     daily: [],
     weekly: [],
@@ -35,6 +35,11 @@ const Dashboard = () => {
 
   useEffect(() => {
     getAllAppointments();
+    // also load analytics server-side for consistency
+    (async () => {
+      const a = await getAppointmentAnalytics();
+      if (a) setChartData({ daily: a.daily || [], weekly: a.weekly || [], monthly: a.monthly || [] })
+    })()
   }, []);
 
   useEffect(() => {
