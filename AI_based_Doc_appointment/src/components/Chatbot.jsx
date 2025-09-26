@@ -172,34 +172,17 @@ export default function Chatbot() {
     setLoading(true);
 
     try {
-      // Translate user input to English for processing
-      const translatedInput = await translateToEnglish(input, language);
-
-      // Send to chatbot API
+      // Send to chatbot API with raw input; backend handles multilingual
       const res = await axios.post("http://localhost:4000/api/chatbot/chat", {
-        userQuery: translatedInput,
+        userQuery: input,
         chatHistory: newChat.slice(0, -1), // Exclude current message
         language: language
       });
 
-      let botReply = res.data.response;
-      
-      // If response is in English and user language is different, translate it
-      if (language !== "en") {
-        try {
-          const translatedReply = await translateFromEnglish(botReply, language);
-          // If online translation failed, try offline translation
-          if (translatedReply === botReply) {
-            const offlineTranslation = quickTranslate(botReply, "en", language);
-            botReply = offlineTranslation;
-          } else {
-            botReply = translatedReply;
-          }
-        } catch (translationError) {
-          console.warn("Translation failed, trying offline translation:", translationError);
-          // Try offline translation as fallback
-          botReply = quickTranslate(botReply, "en", language);
-        }
+      let botReply = (res.data && res.data.response) ? res.data.response : '';
+      // Basic cleanup fallback in case of bad content
+      if (!botReply || botReply === 'undefined' || botReply.includes('undefined')) {
+        botReply = getWelcomeMessage(language);
       }
 
       const assistantMessage = { role: "assistant", content: botReply };

@@ -182,47 +182,66 @@ const DoctorsList = () => {
   }, [aToken])
 
   return (
-    <div className="m-5 max-h-[90vh] overflow-y-auto max-w-full overflow-x-auto">
-      <h1 className="text-lg font-medium mb-5">All Doctors</h1>
+    <div className="m-5 max-h-[90vh] overflow-y-auto max-w-full">
+      <div className="flex items-center justify-between gap-3 mb-5">
+        <h1 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+          <span className="align-middle">👨‍⚕️</span> All Doctors
+        </h1>
+        <span className="text-sm text-gray-500">Total: <span className="font-medium text-gray-700">{(Array.isArray(doctors)? doctors:[]).length}</span></span>
+      </div>
 
-      <div className="w-full overflow-x-auto rounded-md border border-[#2fb5a5]/40">
-        <table className="w-full min-w-full divide-y divide-gray-200 text-sm">
-          <thead  style={{ backgroundColor: '#037c6e' }} className="text-white">
+      <div className="w-full overflow-x-auto rounded-2xl border border-[#2fb5a5]/40 bg-white shadow-md">
+        <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, #037c6e 0%, #2fb5a5 100%)' }}></div>
+        <table className="w-full min-w-[640px] text-sm">
+          <thead className="text-white sticky top-0 z-10 shadow" style={{ backgroundColor: '#037c6e' }}>
             <tr>
-              <th className="px-6 py-3 text-left font-semibold">Image</th>
-              <th className="px-6 py-3 text-left font-semibold">Name</th>
-              <th className="px-6 py-3 text-left font-semibold">Speciality</th>
-              <th className="px-6 py-3 text-center font-semibold">Availability</th>
+              <th className="px-6 py-3 text-left font-semibold uppercase tracking-wide text-xs">Doctor</th>
+              <th className="px-6 py-3 text-left font-semibold uppercase tracking-wide text-xs">Name</th>
+              <th className="px-6 py-3 text-left font-semibold uppercase tracking-wide text-xs">Speciality</th>
+              <th className="px-6 py-3 text-center font-semibold uppercase tracking-wide text-xs">Availability</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="divide-y divide-gray-100">
             {(Array.isArray(doctors) ? doctors : []).map((item, index) => (
-              <tr key={index} className="hover:bg-[#e3fcf3]/60 transition">
+              <tr key={index} className="group even:bg-gray-50/60 hover:bg-[#e3fcf3]/60 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-3">
                     {item?.image ? (
                       <img
                         src={item.image}
                         alt={item?.name || 'Doctor'}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-[#2fb5a5]/50 bg-[#e3fcf3]"
+                        className="w-12 h-12 rounded-full object-cover ring-2 ring-white border-2 border-[#2fb5a5]/50 bg-[#e3fcf3] shadow-sm group-hover:shadow-md transition"
                       />
                     ) : (
                       <div className="w-12 h-12 rounded-full border-2 border-[#2fb5a5]/50 bg-[#e3fcf3]"></div>
                     )}
                   </div>
                 </td>
-                <td className="px-6 py-4 font-medium text-gray-800">{item.name}</td>
-                <td className="px-6 py-4 text-gray-500">{item.speciality}</td>
+                <td className="px-6 py-4 font-medium text-gray-800">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate text-[15px]">{item.name}</span>
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full border text-xs font-semibold bg-[#e3fcf3] border-[#2fb5a5]/40 text-[#037c6e] shadow-sm">
+                    {item.speciality}
+                  </span>
+                </td>
                 <td className="px-6 py-4 text-center">
-                  <label className="inline-flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={item.available}
-                      onChange={() => changeAvailability(item._id)}
-                      className="form-checkbox h-4 w-4 text-[#2fb5a5] focus:ring-[#2fb5a5]"
-                    />
-                    <span className="text-gray-700">Available</span>
-                  </label>
+                  <div className="inline-flex items-center gap-2">
+                    <span className={`h-2.5 w-2.5 rounded-full ${item.available ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                    <label className="inline-flex items-center gap-2 cursor-pointer" title="Toggle availability">
+                      <input
+                        type="checkbox"
+                        checked={item.available}
+                        onChange={() => changeAvailability(item._id)}
+                        className="form-checkbox h-4 w-4 text-[#2fb5a5] focus:ring-[#2fb5a5]"
+                      />
+                      <span className={`text-sm font-medium ${item.available ? 'text-green-700' : 'text-red-600'}`}>
+                        {item.available ? 'Available' : 'Unavailable'}
+                      </span>
+                    </label>
+                  </div>
                 </td>
               </tr>
             ))}

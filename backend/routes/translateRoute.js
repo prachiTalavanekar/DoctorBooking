@@ -4,6 +4,53 @@ import axios from "axios";
 
 const router = express.Router();
 
+// Translation service configuration
+const TRANSLATION_CONFIG = {
+  PRIMARY: {
+    name: "Google Translate",
+    enabled: process.env.GOOGLE_TRANSLATE_API_KEY ? true : false,
+    apiKey: process.env.GOOGLE_TRANSLATE_API_KEY,
+    url: "https://translation.googleapis.com/language/translate/v2",
+    timeout: 8000
+  },
+  SECONDARY: {
+    name: "MyMemory", 
+    enabled: true,
+    url: "https://api.mymemory.translated.net/get",
+    timeout: 5000
+  },
+  TERTIARY: {
+    name: "LibreTranslate",
+    enabled: true,
+    url: "https://libretranslate.de/translate",
+    timeout: 5000
+  }
+};
+
+// Quality assessment function
+const assessTranslationQuality = (originalText, translatedText, sourceLang, targetLang) => {
+  if (!translatedText || translatedText.trim().length === 0) return 0;
+  if (translatedText === originalText) return 0;
+  if (translatedText.includes('undefined') || translatedText === 'undefined') return 0;
+  
+  // Basic quality checks
+  const lengthRatio = translatedText.length / originalText.length;
+  if (lengthRatio < 0.3 || lengthRatio > 3) return 30; // Suspicious length ratio
+  
+  // Check for repeated words (indicates poor translation)
+  const words = translatedText.toLowerCase().split(' ');
+  const uniqueWords = new Set(words);
+  if (words.length > 3 && uniqueWords.size / words.length < 0.5) return 40;
+  
+  // Language script validation
+  if (targetLang === 'hi' || targetLang === 'mr') {
+    const devanagariRegex = /[\u0900-\u097F]/;
+    if (!devanagariRegex.test(translatedText)) return 20;
+  }
+  
+  return 100; // Good quality
+};
+
 // Fast offline translation dictionary for common medical terms
 const medicalTranslations = {
   // English to Hindi
@@ -90,22 +137,200 @@ const medicalTranslations = {
   }
 };
 
-// Fast offline translation function
+// Primary API: Google Translate (Paid, High Quality)
+const translateWithGoogleTranslate = async (text, source, target) => {
+  if (!TRANSLATION_CONFIG.PRIMARY.enabled) {
+    throw new Error('Google Translate API key not configured');
+  }
+  
+  try {
+    const response = await axios.post(
+      TRANSLATION_CONFIG.PRIMARY.url,
+      {
+        q: text,
+        source: source,
+        target: target,
+        format: 'text'
+      },
+      {
+        params: {
+          key: TRANSLATION_CONFIG.PRIMARY.apiKey
+        },
+        timeout: TRANSLATION_CONFIG.PRIMARY.timeout,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    const translatedText = response.data?.data?.translations?.[0]?.translatedText;
+    if (!translatedText) throw new Error('Invalid response format');
+    
+    const quality = assessTranslationQuality(text, translatedText, source, target);
+    
+    return {
+      translatedText,
+      quality,
+      method: 'google_translate',
+      service: TRANSLATION_CONFIG.PRIMARY.name
+    };
+  } catch (error) {
+    console.warn(`${TRANSLATION_CONFIG.PRIMARY.name} failed:`, error.message);
+    throw error;
+  }
+};
+
+// Secondary API: MyMemory (Free, Good Quality)
+const translateWithMyMemory = async (text, source, target) => {
+  try {
+    const response = await axios.get(TRANSLATION_CONFIG.SECONDARY.url, {
+      params: {
+        q: text.trim(),
+        langpair: `${source}|${target}`
+      },
+      timeout: TRANSLATION_CONFIG.SECONDARY.timeout
+    });
+    
+    const translatedText = response.data?.responseData?.translatedText;
+    if (!translatedText) throw new Error('Invalid response format');
+    
+    const quality = assessTranslationQuality(text, translatedText, source, target);
+    
+    return {
+      translatedText,
+      quality,
+      method: 'mymemory',
+      service: TRANSLATION_CONFIG.SECONDARY.name
+    };
+  } catch (error) {
+    console.warn(`${TRANSLATION_CONFIG.SECONDARY.name} failed:`, error.message);
+    throw error;
+  }
+};
+
+// Tertiary API: LibreTranslate (Free, Backup)
+const translateWithLibreTranslate = async (text, source, target) => {
+  try {
+    const response = await axios.post(
+      TRANSLATION_CONFIG.TERTIARY.url,
+      {
+        q: text.trim(),
+        source: source,
+        target: target,
+        format: 'text'
+      },
+      {
+        timeout: TRANSLATION_CONFIG.TERTIARY.timeout,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    const translatedText = response.data?.translatedText;
+    if (!translatedText) throw new Error('Invalid response format');
+    
+    const quality = assessTranslationQuality(text, translatedText, source, target);
+    
+    return {
+      translatedText,
+      quality,
+      method: 'libretranslate',
+      service: TRANSLATION_CONFIG.TERTIARY.name
+    };
+  } catch (error) {
+    console.warn(`${TRANSLATION_CONFIG.TERTIARY.name} failed:`, error.message);
+    throw error;
+  }
+};
+// Local Fallback: Enhanced offline translation
 const translateOffline = (text, source, target) => {
   const key = `${source}-${target}`;
   const dictionary = medicalTranslations[key];
   
   if (!dictionary) return null;
   
-  let translatedText = text.toLowerCase();
+  let translatedText = text;
+  let hasTranslations = false;
   
-  // Replace known terms
+  // Replace known terms with word boundaries for better accuracy
   for (const [original, translation] of Object.entries(dictionary)) {
-    const regex = new RegExp(original.toLowerCase(), 'gi');
-    translatedText = translatedText.replace(regex, translation);
+    const escapedOriginal = original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${escapedOriginal}\\b`, 'gi');
+    const newText = translatedText.replace(regex, translation);
+    if (newText !== translatedText) {
+      translatedText = newText;
+      hasTranslations = true;
+    }
   }
   
-  return translatedText !== text.toLowerCase() ? translatedText : null;
+  // Return result with quality assessment
+  if (hasTranslations) {
+    const quality = assessTranslationQuality(text, translatedText, source, target);
+    return {
+      translatedText,
+      quality: Math.max(quality, 60), // Offline gets minimum 60 quality
+      method: 'offline',
+      service: 'Local Dictionary'
+    };
+  }
+  
+  return null;
+};
+
+// Main translation function with cascading fallback
+const translateText = async (text, source, target) => {
+  const results = [];
+  
+  // Step 1: Try Primary API (Google Translate)
+  if (TRANSLATION_CONFIG.PRIMARY.enabled) {
+    try {
+      const result = await translateWithGoogleTranslate(text, source, target);
+      results.push(result);
+      if (result.quality >= 80) {
+        return result; // High quality, use immediately
+      }
+    } catch (error) {
+      console.log('Primary translation service unavailable, trying secondary...');
+    }
+  }
+  
+  // Step 2: Try Secondary API (MyMemory)
+  try {
+    const result = await translateWithMyMemory(text, source, target);
+    results.push(result);
+    if (result.quality >= 70) {
+      return result; // Good quality, use if no better option
+    }
+  } catch (error) {
+    console.log('Secondary translation service failed, trying tertiary...');
+  }
+  
+  // Step 3: Try Tertiary API (LibreTranslate)
+  try {
+    const result = await translateWithLibreTranslate(text, source, target);
+    results.push(result);
+    if (result.quality >= 60) {
+      return result; // Acceptable quality
+    }
+  } catch (error) {
+    console.log('Tertiary translation service failed, using offline fallback...');
+  }
+  
+  // Step 4: Local Fallback
+  const offlineResult = translateOffline(text, source, target);
+  if (offlineResult) {
+    results.push(offlineResult);
+  }
+  
+  // Return best available result or null
+  if (results.length > 0) {
+    // Sort by quality and return the best one
+    results.sort((a, b) => b.quality - a.quality);
+    return results[0];
+  }
+  
+  return null;
 };
 
 // Language code mapping for different services
@@ -136,15 +361,11 @@ router.post("/translate", async (req, res) => {
 
     // If source and target are the same, return original text
     if (source === target) {
-      return res.json({ translatedText: q });
-    }
-
-    // Try offline translation first (fastest)
-    const offlineTranslation = translateOffline(q, source, target);
-    if (offlineTranslation) {
       return res.json({ 
-        translatedText: offlineTranslation,
-        method: "offline"
+        translatedText: q,
+        method: "no_translation_needed",
+        service: "System",
+        quality: 100
       });
     }
 
@@ -152,99 +373,32 @@ router.post("/translate", async (req, res) => {
     const mappedSource = languageMapping[source] || source;
     const mappedTarget = languageMapping[target] || target;
 
-    let translatedText = null;
-    let lastError = null;
+    // Attempt translation with cascading fallback
+    const result = await translateText(q, mappedSource, mappedTarget);
+    
+    if (result) {
+      // Clean up the translated text
+      const cleanedText = result.translatedText
+        .replace(/\s+/g, ' ')
+        .trim();
 
-    // Try MyMemory first (faster and more reliable than LibreTranslate)
-    try {
-      const response = await axios.get("https://api.mymemory.translated.net/get", {
-        params: {
-          q: q.trim(),
-          langpair: `${mappedSource}|${mappedTarget}`
-        },
-        timeout: 5000 // Reduced timeout
-      });
-
-      if (response.data && response.data.responseData && response.data.responseData.translatedText) {
-        translatedText = response.data.responseData.translatedText;
-      }
-    } catch (error) {
-      console.warn("MyMemory failed:", error.message);
-      lastError = error;
-    }
-
-    // Fallback to LibreTranslate if MyMemory failed
-    if (!translatedText) {
-      try {
-        const response = await axios.post(
-          "https://libretranslate.de/translate",
-          {
-            q: q.trim(),
-            source: mappedSource,
-            target: mappedTarget,
-            format: "text"
-          },
-          {
-            timeout: 5000, // Reduced timeout
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-
-        if (response.data && response.data.translatedText) {
-          translatedText = response.data.translatedText;
-        }
-      } catch (error) {
-        console.warn("LibreTranslate failed:", error.message);
-        lastError = error;
-      }
-    }
-
-    // If online services failed, try a more comprehensive offline translation
-    if (!translatedText) {
-      // Try word-by-word translation for better coverage
-      const words = q.toLowerCase().split(' ');
-      const key = `${source}-${target}`;
-      const dictionary = medicalTranslations[key];
-      
-      if (dictionary) {
-        const translatedWords = words.map(word => {
-          // Check for exact matches first
-          if (dictionary[word]) return dictionary[word];
-          
-          // Check for partial matches
-          for (const [original, translation] of Object.entries(dictionary)) {
-            if (word.includes(original.toLowerCase()) || original.toLowerCase().includes(word)) {
-              return translation;
-            }
-          }
-          
-          return word; // Keep original if no translation found
-        });
-        
-        translatedText = translatedWords.join(' ');
-      }
-    }
-
-    // Final fallback - return original text
-    if (!translatedText || translatedText === q) {
-      console.error("All translation methods failed:", lastError?.message);
-      return res.json({ 
-        translatedText: q, 
-        warning: "Translation unavailable, returning original text",
-        method: "fallback"
+      return res.json({
+        translatedText: cleanedText,
+        method: result.method,
+        service: result.service,
+        quality: result.quality,
+        timestamp: new Date().toISOString()
       });
     }
 
-    // Clean up the translated text
-    const cleanedText = translatedText
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    res.json({ 
-      translatedText: cleanedText,
-      method: translatedText === offlineTranslation ? "offline" : "online"
+    // All translation methods failed
+    console.error("All translation methods failed for:", { q, source, target });
+    return res.json({ 
+      translatedText: q, 
+      warning: "Translation unavailable, returning original text",
+      method: "fallback",
+      service: "System",
+      quality: 0
     });
 
   } catch (error) {
@@ -252,17 +406,45 @@ router.post("/translate", async (req, res) => {
     res.status(500).json({ 
       error: "Translation failed",
       translatedText: req.body.q, // Return original text as fallback
-      method: "error_fallback"
+      method: "error_fallback",
+      service: "System",
+      quality: 0
     });
   }
 });
 
-// Health check endpoint
+// Enhanced health check endpoint
 router.get("/health", (req, res) => {
+  const serviceStatus = {
+    primary: {
+      name: TRANSLATION_CONFIG.PRIMARY.name,
+      enabled: TRANSLATION_CONFIG.PRIMARY.enabled,
+      configured: !!TRANSLATION_CONFIG.PRIMARY.apiKey
+    },
+    secondary: {
+      name: TRANSLATION_CONFIG.SECONDARY.name,
+      enabled: TRANSLATION_CONFIG.SECONDARY.enabled,
+      configured: true
+    },
+    tertiary: {
+      name: TRANSLATION_CONFIG.TERTIARY.name,
+      enabled: TRANSLATION_CONFIG.TERTIARY.enabled,
+      configured: true
+    },
+    offline: {
+      name: "Local Dictionary",
+      enabled: true,
+      configured: true,
+      supportedLanguagePairs: Object.keys(medicalTranslations)
+    }
+  };
+  
   res.json({ 
     status: "OK", 
-    service: "Translation API",
-    supportedLanguages: Object.keys(languageMapping)
+    service: "Enhanced Translation API",
+    supportedLanguages: Object.keys(languageMapping),
+    services: serviceStatus,
+    timestamp: new Date().toISOString()
   });
 });
 

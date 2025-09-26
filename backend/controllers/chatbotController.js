@@ -160,23 +160,42 @@ export const getChatbotResponse = async (req, res) => {
     }
 
     // Shorter system prompt to save tokens
-    const systemPrompt = `You are MediSync AI, a medical assistant. Provide helpful medical information in a caring tone. Ask follow-up questions about symptoms. Suggest possible conditions but never diagnose. Always recommend consulting healthcare professionals. Keep responses under 150 words. Only answer medical questions.`;
+    const systemPrompt = `You are MediSync AI, a medical assistant. Provide helpful medical information in a caring tone. Ask one follow-up question if needed. Suggest possible conditions but never diagnose. Always recommend consulting healthcare professionals. Keep responses under 120 words. Only answer medical questions. Avoid emojis and excessive punctuation.`;
+
+    // If non-English, translate user query to English first to avoid gibberish
+    let finalUserQuery = userQuery;
+    let targetLang = (language || 'en').toLowerCase();
+    if (targetLang !== 'en') {
+      try {
+        const base = process.env.BACKEND_INTERNAL_URL || `http://127.0.0.1:${process.env.PORT || 4000}`;
+        const t = await axios.post(`${base}/api/translate`, {
+          q: userQuery,
+          source: targetLang,
+          target: 'en'
+        }, { timeout: 7000 });
+        if (t.data?.translatedText) {
+          finalUserQuery = t.data.translatedText;
+        }
+      } catch (e) {
+        // If translation fails, continue with original to keep bot responsive
+      }
+    }
 
     // Prepare messages for AI
     const messages = [
       { role: "system", content: systemPrompt },
       ...(chatHistory || []).slice(-5), // Keep only last 5 messages to save tokens
-      { role: "user", content: userQuery }
+      { role: "user", content: finalUserQuery }
     ];
 
     // API call to OpenRouter with reduced tokens
     const response = await axios.post(
       BASE_URL,
       {
-        model: "gpt-3.5-turbo", // Use cheaper model
+        model: "gpt-3.5-turbo",
         messages,
-        temperature: 0.7,
-        max_tokens: 200, // Reduced from 400 to 200
+        temperature: targetLang === 'en' ? 0.6 : 0.4,
+        max_tokens: 180,
         top_p: 0.9
       },
       {
@@ -189,13 +208,38 @@ export const getChatbotResponse = async (req, res) => {
       }
     );
 
-    const answer = response.data.choices[0].message.content;
+    let answer = response.data.choices[0].message.content || '';
     
     // Clean up the response
-    const cleanAnswer = answer
+    let cleanAnswer = answer
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+      .replace(/\s+/g, ' ')
       .trim();
+
+    // Guard against undefined-like noise
+    if (!cleanAnswer || cleanAnswer === 'undefined' || /undefined/i.test(cleanAnswer)) {
+      cleanAnswer = 'I am currently unable to answer. Please rephrase your medical question.';
+    }
+
+    // If target language is non-English, translate back to that language
+    if (targetLang !== 'en') {
+      try {
+        const base = process.env.BACKEND_INTERNAL_URL || `http://127.0.0.1:${process.env.PORT || 4000}`;
+        const t2 = await axios.post(`${base}/api/translate`, {
+          q: cleanAnswer,
+          source: 'en',
+          target: targetLang
+        }, { timeout: 7000 });
+        if (t2.data?.translatedText) {
+          cleanAnswer = t2.data.translatedText;
+        }
+      } catch (e) {
+        // If translation back fails, fall back to English cleanAnswer
+      }
+    }
 
     res.json({ response: cleanAnswer });
     

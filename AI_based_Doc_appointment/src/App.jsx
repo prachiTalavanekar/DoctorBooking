@@ -14,6 +14,8 @@ import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css';
 import Chatbot from './components/Chatbot'
 import Notification from './components/Notification'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 
 
 
@@ -28,6 +30,8 @@ const App = () => {
         <Route path='/doctors/:speciality' element={<Doctors />} />
         <Route path='/doctors' element={<Doctors />} />
         <Route path='/login' element={<Login />} />
+        <Route path='/forgot-password' element={<ForgotPassword />} />
+        <Route path='/reset-password' element={<ResetPassword />} />
         <Route path='/about' element={<About />} />
         <Route path='/contact' element={<Contact />} />
         <Route path='/my-profile' element={<MyProfile />} />

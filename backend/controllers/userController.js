@@ -1,10 +1,12 @@
 import validator from 'validator'
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 import userModel from '../modals/userModel.js'
 import doctorModel from '../modals/doctorModel.js'
 import jwt from 'jsonwebtoken'
 import { v2 as cloudinary } from 'cloudinary'
 import appointmentModel from '../modals/appointmentModel.js'
+import { sendMail } from '../utils/mailer.js'
 
 
 
@@ -515,3 +517,143 @@ const cancelAppointment = async (req, res) => {
 
 
 export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment }
+
+// ================= Password Reset (via Email) =================
+
+// POST /api/user/forgot-password
+export const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body
+        console.log('Forgot password request received for email:', email)
+        
+        if (!email || !validator.isEmail(email)) {
+            return res.json({ success: false, message: 'Enter a valid email' })
+        }
+
+        const user = await userModel.findOne({ email })
+        if (!user) {
+            console.log('User not found for email:', email)
+            // Do not disclose existence for security
+            return res.json({ success: true, message: 'If the email exists, reset link has been sent' })
+        }
+
+        console.log('User found, generating reset token...')
+        
+        // Generate token
+        const token = crypto.randomBytes(32).toString('hex')
+        const expires = new Date(Date.now() + 1000 * 60 * 15) // 15 minutes
+
+        user.resetPasswordToken = token
+        user.resetPasswordExpires = expires
+        await user.save()
+        
+        console.log('Reset token saved to database')
+
+        const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:5173'
+        const resetUrl = `${appBaseUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`
+
+        console.log('Attempting to send reset email...')
+        
+        try {
+            await sendMail({
+                to: email,
+                subject: 'MediSync AI - Password Reset Instructions',
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <h2 style="color: #037c6e;">Password Reset Request</h2>
+                        <p>Hello,</p>
+                        <p>You requested to reset your password for your MediSync AI account.</p>
+                        <p>Click the button below to set a new password (this link is valid for 15 minutes only):</p>
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="${resetUrl}" style="background-color: #037c6e; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
+                        </div>
+                        <p>If the button doesn't work, copy and paste this link into your browser:</p>
+                        <p style="word-break: break-all; color: #666;">${resetUrl}</p>
+                        <p style="margin-top: 30px; color: #666; font-size: 12px;">If you did not request this password reset, please ignore this email. Your password will not be changed.</p>
+                    </div>
+                `,
+                text: `Reset your MediSync AI password: ${resetUrl}\n\nThis link is valid for 15 minutes. If you did not request this, please ignore this email.`
+            })
+            
+            console.log('✅ Reset email sent successfully!')
+            
+        } catch (emailError) {
+            console.error('❌ Failed to send reset email:', emailError.message)
+            console.log('🔗 FALLBACK - Use this reset link manually:', resetUrl)
+            
+            // For development, allow manual link usage
+            if (process.env.NODE_ENV !== 'production') {
+                console.log('📧 Email sending failed, but reset link is available in console above')
+                return res.json({ 
+                    success: true, 
+                    message: 'Email configuration issue detected. Check server console for reset link.',
+                    debugResetUrl: resetUrl
+                })
+            }
+            
+            return res.json({ 
+                success: false, 
+                message: 'Failed to send reset email. Please contact support or check email configuration.' 
+            })
+        }
+
+        // Helpful for development: log the reset link
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('Debug reset URL:', resetUrl)
+        }
+
+        return res.json({ 
+            success: true, 
+            message: 'If the email exists, reset link has been sent',
+            ...(process.env.NODE_ENV !== 'production' && { debugResetUrl: resetUrl })
+        })
+        
+    } catch (error) {
+        console.error('Forgot password error:', error)
+        return res.json({ success: false, message: 'An error occurred. Please try again later.' })
+    }
+}
+
+// POST /api/user/reset-password
+export const resetPassword = async (req, res) => {
+    try {
+        const { email, token, password } = req.body
+        console.log('Password reset attempt for email:', email)
+        
+        if (!email || !token || !password) {
+            return res.json({ success: false, message: 'Missing required details' })
+        }
+        
+        if (password.length < 8) {
+            return res.json({ success: false, message: 'Password must be at least 8 characters long' })
+        }
+
+        const user = await userModel.findOne({ 
+            email, 
+            resetPasswordToken: token, 
+            resetPasswordExpires: { $gt: new Date() } 
+        })
+        
+        if (!user) {
+            console.log('Invalid or expired reset token for email:', email)
+            return res.json({ success: false, message: 'Invalid or expired reset link. Please request a new one.' })
+        }
+
+        console.log('Valid reset token found, updating password...')
+        
+        const salt = await bcrypt.genSalt(10)
+        const hashedPassword = await bcrypt.hash(password, salt)
+        
+        user.password = hashedPassword
+        user.resetPasswordToken = undefined
+        user.resetPasswordExpires = undefined
+        await user.save()
+        
+        console.log('✅ Password reset successful for email:', email)
+
+        return res.json({ success: true, message: 'Password reset successful! You can now login with your new password.' })
+    } catch (error) {
+        console.error('Reset password error:', error)
+        return res.json({ success: false, message: 'An error occurred while resetting password. Please try again.' })
+    }
+}

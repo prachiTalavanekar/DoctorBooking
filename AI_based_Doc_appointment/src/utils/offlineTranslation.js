@@ -57,17 +57,26 @@ export const quickTranslate = (text, sourceLang, targetLang) => {
   const key = `${sourceLang}-${targetLang}`;
   const dictionary = medicalDictionary[key];
   
-  if (!dictionary) return text;
-  
-  let translatedText = text.toLowerCase();
-  
-  // Replace known terms
-  for (const [original, translation] of Object.entries(dictionary)) {
-    const regex = new RegExp(original.toLowerCase(), 'gi');
-    translatedText = translatedText.replace(regex, translation);
+  if (!dictionary) {
+    console.warn(`No offline dictionary available for ${sourceLang} -> ${targetLang}`);
+    return text;
   }
   
-  return translatedText !== text.toLowerCase() ? translatedText : text;
+  let translatedText = text;
+  let hasTranslations = false;
+  
+  // Replace known terms with word boundaries for better accuracy
+  for (const [original, translation] of Object.entries(dictionary)) {
+    const regex = new RegExp(`\\b${original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+    const newText = translatedText.replace(regex, translation);
+    if (newText !== translatedText) {
+      translatedText = newText;
+      hasTranslations = true;
+    }
+  }
+  
+  // Only return translated text if we actually made some translations
+  return hasTranslations ? translatedText : text;
 };
 
 // Get welcome message in different languages

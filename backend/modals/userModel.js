@@ -9,6 +9,8 @@ const userSchema = new mongoose.Schema({
     gender : {type:String, default:"not selected"},
     dob : {type:String, default:"not selected"},
     phone : {type:String, default:"0000000000"},
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date }
 })
 
 const userModel =mongoose.models.user || mongoose.model('user',userSchema)

@@ -142,6 +142,11 @@ const Login = () => {
                   {state === 'Sign Up' ? "Sign in here" : "Create one here"}
                 </button>
               </p>
+              {state === 'Login' && (
+                <div className='mt-3'>
+                  <a href='/forgot-password' className='text-sm text-[#037c6e] hover:underline'>Forgot password?</a>
+                </div>
+              )}
             </div>
           </div>
         </form>

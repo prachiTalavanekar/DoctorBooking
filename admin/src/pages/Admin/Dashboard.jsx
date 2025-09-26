@@ -50,6 +50,46 @@ const Dashboard = () => {
 
   const generateChartData = () => {
     const now = new Date();
+    const toYMD = (d) => {
+      if (!d) return null;
+      if (typeof d === 'string') {
+        if (d.includes('-')) {
+          // try to normalize strings like YYYY-MM-DD or DD-MM-YYYY
+          const parts = d.split('-');
+          if (parts.length === 3) {
+            if (parts[0].length === 4) {
+              // YYYY-MM-DD
+              const dateOnly = d.split('T')[0];
+              return dateOnly;
+            } else {
+              // DD-MM-YYYY
+              return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+          }
+        }
+        // fallback parse generic strings like "Mon Sep 29 2025 ..."
+        const parsed = new Date(d);
+        if (!isNaN(parsed)) {
+          const y = parsed.getFullYear();
+          const m = String(parsed.getMonth() + 1).padStart(2, '0');
+          const day = String(parsed.getDate()).padStart(2, '0');
+          return `${y}-${m}-${day}`;
+        }
+        return null;
+      }
+      if (d instanceof Date) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      }
+      return null;
+    };
+
+    const toYM = (d) => {
+      const ymd = toYMD(d);
+      return ymd ? ymd.substring(0, 7) : null;
+    };
     const last7Days = [];
     const last4Weeks = [];
     const last6Months = [];
@@ -61,22 +101,8 @@ const Dashboard = () => {
       const dateStr = date.toISOString().split('T')[0];
       
       const count = appointments.filter(apt => {
-        // Handle different date formats
-        let aptDateStr = apt.slotDate;
-        if (aptDateStr && typeof aptDateStr === 'string') {
-          // If it's already in YYYY-MM-DD format
-          if (aptDateStr.includes('-')) {
-            aptDateStr = aptDateStr.split('T')[0]; // Remove time if present
-          } else {
-            // If it's in DD-MM-YYYY or other format, convert it
-            const parts = aptDateStr.split('-');
-            if (parts.length === 3 && parts[0].length <= 2) {
-              // DD-MM-YYYY format
-              aptDateStr = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-            }
-          }
-        }
-        return aptDateStr === dateStr && !apt.cancelled;
+        const aptYMD = toYMD(apt.slotDate);
+        return aptYMD === dateStr && !apt.cancelled;
       }).length;
       
       last7Days.push({
@@ -131,20 +157,8 @@ const Dashboard = () => {
       const monthStr = `${year}-${month}`;
 
       const count = appointments.filter(apt => {
-        let aptDateStr = apt.slotDate;
-        if (aptDateStr && typeof aptDateStr === 'string') {
-          if (aptDateStr.includes('-')) {
-            const parts = aptDateStr.split('-');
-            if (parts[0].length === 4) {
-              // YYYY-MM-DD format
-              aptDateStr = aptDateStr.substring(0, 7); // Get YYYY-MM
-            } else {
-              // DD-MM-YYYY format
-              aptDateStr = `${parts[2]}-${parts[1].padStart(2, '0')}`;
-            }
-          }
-        }
-        return aptDateStr === monthStr && !apt.cancelled;
+        const ym = toYM(apt.slotDate);
+        return ym === monthStr && !apt.cancelled;
       }).length;
 
       last6Months.push({
